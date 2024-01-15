@@ -1,0 +1,5 @@
+{
+    "ATGAddress": "127.0.0.1",
+    "ATGPort": 1234,
+    "ATGFormat": "json"
+  }
