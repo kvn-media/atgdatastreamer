@@ -1,8 +1,0 @@
-DatabasePath: "./data/SyncHub.db"
-BackendEndpoint: "http://app-server:8080"
-SerialPortConfig:
-  Port: "/dev/ttyS0"
-  BaudRate: 9600
-  DataBits: 8
-  StopBits: 1
-  Parity: "N"
