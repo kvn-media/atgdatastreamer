@@ -1,41 +1,33 @@
 package services
 
 import (
-	"encoding/json"
-	"fmt"
-	"net"
-
-	"github.com/kvn-media/atgdatastreamer/models"
+	// "github.com/kvn-media/atgdatastreamer/models"
+	"github.com/kvn-media/atgdatastreamer/repositories"
 )
 
-func ReadATGData(conn net.Conn) ([]byte, error) {
-	// Read data from ATG
-	data := make([]byte, 1024)
-
-	// Read data from ATG into the byte slice
-	n, err := conn.Read(data)
-	if err != nil {
-		return nil, fmt.Errorf("error reading from ATG: %w", err) // Wrap the error for context
-	}
-
-	// Return the actual data read
-	return data[:n], nil // Return only the slice containing the read data
+// ATGService handles business logic related to the ATG system
+type ATGService struct {
+	Repository *repositories.ATGRepository
 }
 
-func ParseATGData(data []byte) (*models.ATGData, error) {
-	// Parse data
-	atgData := models.ATGData{}
-	err := json.Unmarshal(data, &atgData)
-	if err != nil {
-		return nil, err
+// NewATGService creates a new instance of ATGService
+func NewATGService(repo *repositories.ATGRepository) *ATGService {
+	return &ATGService{
+		Repository: repo,
 	}
-
-	return &atgData, nil
 }
 
-func PrintATGData(data *models.ATGData) {
-	fmt.Println("Type:", data.Type)
-	fmt.Println("ID:", data.ID)
-	fmt.Println("Value:", data.Value)
-	fmt.Println("Timestamp:", data.Timestamp)
+// SaveATGData saves ATG data to the database
+func (s *ATGService) SaveATGData(data interface{}) error {
+	// Implement any business logic or validation before saving data
+	// Example: Check if the data is valid before saving
+
+	// Call the repository to save the data
+	return s.Repository.SaveATGData(data)
+}
+
+// GetLatestATGData retrieves the latest ATG data from the database
+func (s *ATGService) GetLatestATGData() (interface{}, error) {
+	// Call the repository to get the latest ATG data
+	return s.Repository.GetLatestATGData()
 }

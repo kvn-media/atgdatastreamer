@@ -1,47 +1,45 @@
 package configs
 
 import (
-	"encoding/json"
-	"fmt"
+	"log"
 	"os"
+	"strconv"
 )
 
+// Config holds application configurations
 type Config struct {
-	ATGAddress string
-	ATGPort    int
-	ATGFormat  string
+	// Communication settings
+	MiniPCAddress string // Alamat IP atau host Mini PC
+	MiniPCPort    int    // Port untuk komunikasi dengan Mini PC
+
+	// Database settings
+	SQLiteDBPath string // Path untuk database SQLite
+
+	// Add other configuration parameters as needed
 }
 
+// LoadConfig loads configuration from environment variables
 func LoadConfig() *Config {
-	// Load configuration file
-	config := &Config{}
-	fileData, err := os.ReadFile("config.json") // Read the file and handle errors
+	miniPCAddress := os.Getenv("MINI_PC_ADDRESS")
+	if miniPCAddress == "" {
+		log.Fatal("MINI_PC_ADDRESS is not set")
+	}
+
+	miniPCPortStr := os.Getenv("MINI_PC_PORT")
+	miniPCPort, err := strconv.Atoi(miniPCPortStr)
 	if err != nil {
-		fmt.Println("Error reading config file:", err)
-		return nil
+		log.Fatal("Invalid value for MINI_PC_PORT")
 	}
 
-	err = json.Unmarshal(fileData, config) // Use the file data for unmarshalling
-	if err != nil {
-		fmt.Println("Error unmarshalling JSON:", err)
-		return nil
+	sqliteDBPath := os.Getenv("SQLITE_DB_PATH")
+	if sqliteDBPath == "" {
+		log.Fatal("SQLITE_DB_PATH is not set")
 	}
 
-	// Check configuration
-	if config.ATGAddress == "" {
-		fmt.Println("ATG address must be specified")
-		return nil
+	return &Config{
+		MiniPCAddress: miniPCAddress,
+		MiniPCPort:    miniPCPort,
+		SQLiteDBPath:  sqliteDBPath,
+		// Add other configuration parameters as needed
 	}
-
-	if config.ATGPort < 1 {
-		fmt.Println("ATG port must be greater than or equal to 1")
-		return nil
-	}
-
-	if config.ATGFormat != "json" {
-		fmt.Println("ATG format must be JSON")
-		return nil
-	}
-
-	return config
 }

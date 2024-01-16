@@ -1,46 +1,28 @@
 package controllers
 
 import (
-	"fmt"
-	"time"
-
-	"github.com/kvn-media/atgdatastreamer/managers"
-	"github.com/kvn-media/atgdatastreamer/repositories"
-	"github.com/kvn-media/atgdatastreamer/services"
+	"github.com/kvn-media/atgdatastreamer/models"
+	"github.com/kvn-media/atgdatastreamer/utils"
 )
 
-func CollectATGData(manager *managers.ATGManager, repository *repositories.ATGRepository) {
-	// Continuously collect data from ATG
-	for {
-		// Read data from ATG
-		data, err := services.ReadATGData(manager.Conn) // Access Conn through the manager instance
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
+// ATGController handles communication with the ATG system
+type ATGController struct {
+	commUtils *utils.CommunicationUtils
+}
 
-		// Parse data into ATGData struct
-		atgData, err := services.ParseATGData(data)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
+// NewATGController creates a new instance of ATGController
+func NewATGController(commUtils *utils.CommunicationUtils) *ATGController {
+	return &ATGController{commUtils: commUtils}
+}
 
-		// Save data to database
-		err = repository.SaveATGData(atgData)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
+// SendCommand sends a command to the ATG system
+func (c *ATGController) SendCommand(command []byte) error {
+	// Implement command sending logic
+	return nil
+}
 
-		// Optionally, print data to console
-		services.PrintATGData(atgData)
-
-		// Do something else with the data, like send it to Mini PC 3
-
-		// ...
-
-		// Delay between readings to avoid flooding ATG
-		time.Sleep(1 * time.Second)
-	}
+// ReceiveResponse receives a response from the ATG system
+func (c *ATGController) ReceiveResponse() (*models.ATGData, error) {
+	// Implement response receiving and parsing logic
+	return nil, nil
 }
