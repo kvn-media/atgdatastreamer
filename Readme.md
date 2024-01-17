@@ -1,68 +1,85 @@
 # ATG Data Streamer
 
-> An application for collecting, parsing, and storing data from Automatic Tank Gauges (ATGs).
+ATG Data Streamer is a Go application for streaming and managing data from ATG tanks.
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](license)
+## Features
 
-ATG Data Streamer is a Go application that continuously collects data from ATGs, parses it, and stores it in a database. This README provides an overview of the code structure, components, usage, and other relevant information.
+- **Data Management:** Create, read, update, and delete data from ATG tanks.
+- **Serial Communication:** Read data from the serial port connected to the ATG tank.
+- **HTTPS Delivery:** Send tank data securely over HTTPS.
 
-## Table of Contents
+## Prerequisites
 
-- [ATG Data Streamer](#atg-data-streamer)
-  - [Table of Contents](#table-of-contents)
-  - [Components](#components)
-  - [Usage](#usage)
-  - [Dependencies](#dependencies)
-  - [Configuration](#configuration)
-  - [License](#license)
-  - [Contributing](#contributing)
-  - [Acknowledgments](#acknowledgments)
+Before running the application, make sure you have the following installed:
 
-## Components
+- Go (Golang)
+- SQLite
 
-1. [Configuration](#1-configuration-configgo)
-2. [ATG Manager](#2-atg-manager-atg_managergo)
-3. [ATG Repository](#3-atg-repository-atg_repogo)
-4. [ATG Data Model](#4-atg-data-model-atggo)
-5. [ATG Services](#5-atg-services-atgservicego)
-6. [ATG Controller](#6-atg-controller-atg_controllergo)
-7. [Main Application](#7-main-application-maingo)
+## Installation
 
-## Usage
+1. Clone the repository:
 
-1. Ensure you have a valid `config.json` file with ATG configuration.
-2. Run the application:
+   ```bash
+   git clone https://github.com/kvn-media/atgdatastreamer.git
+   ```
 
-    ```bash
-    go run main.go
-    ```
+2. Change to the project directory:
 
-3. The application will continuously collect data from the ATG, parse it, and store it in the configured database.
+   ```bash
+   cd atgdatastreamer
+   ```
 
-## Dependencies
+3. Install dependencies:
 
-- The application uses a SQLite database for data storage.
+   ```bash
+   go mod tidy
+   ```
+
+4. Build the application:
+
+   ```bash
+   go build
+   ```
+
+5. Run the application:
+
+   ```bash
+   ./atgdatastreamer
+   ```
 
 ## Configuration
 
-Edit the `config.json` file to customize ATG and database settings.
+Configure the application using the `configs/config.json` file. Update the following parameters:
 
-```json
-{
-  "ATGAddress": "127.0.0.1",
-  "ATGPort": 1234,
-  "ATGFormat": "json"
-}
+- `SerialPortName`: The name of the serial port connected to the ATG tank.
+- `SerialPortBaud`: The baud rate for serial communication.
+- `HTTPSEndpoint`: The endpoint for secure data delivery.
+
+## Usage
+
+1. Start the application.
+
+2. Access the API endpoints:
+
+   - Create DataTank: `POST /data-tank`
+   - Get All DataTanks: `GET /data-tank`
+   - Update DataTank: `PUT /data-tank/{id}`
+   - Delete DataTank: `DELETE /data-tank/{id}`
+   - Read from Serial: `GET /read-serial`
+
+## Database Migration
+
+The application uses SQLite. To perform database migration, run:
+
+```bash
+./atgdatastreamer migrate
 ```
-
-## License
-
-This project is licensed under the [MIT License](license).
 
 ## Contributing
 
-Feel free to contribute to the project by creating issues or submitting pull requests.
+Feel free to contribute to the project by opening issues or submitting pull requests.
 
-## Acknowledgments
+## License
 
-- This project was inspired by the need to efficiently collect and manage data from Automatic Tank Gauges.
+This project is licensed under the MIT License - see the [LICENSE](license) file for details.
+```
