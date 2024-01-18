@@ -1,3 +1,4 @@
+// internal/controllers/dataTank_controller.go
 package controllers
 
 import (
@@ -10,17 +11,26 @@ import (
 	"github.com/kvn-media/atgdatastreamer/internal/usecase"
 )
 
-type DataTankController struct {
+type DataTankController interface {
+	CreateDataTank(w http.ResponseWriter, r *http.Request)
+	GetDataTanks(w http.ResponseWriter, r *http.Request)
+	UpdateDataTank(w http.ResponseWriter, r *http.Request)
+	DeleteDataTank(w http.ResponseWriter, r *http.Request)
+	ReadFromSerial(w http.ResponseWriter, r *http.Request)
+}
+
+type dataTankController struct {
 	DataTankUsecase usecase.DataTankUsecase
 }
 
-func NewDataTankController(usecase usecase.DataTankUsecase) *DataTankController {
-	return &DataTankController{
+// NewDataTankController creates a new instance of DataTankController
+func NewDataTankController(usecase usecase.DataTankUsecase) DataTankController {
+	return &dataTankController{
 		DataTankUsecase: usecase,
 	}
 }
 
-func (c *DataTankController) CreateDataTank(w http.ResponseWriter, r *http.Request) {
+func (c *dataTankController) CreateDataTank(w http.ResponseWriter, r *http.Request) {
 	var dataTank models.DataTank
 	err := json.NewDecoder(r.Body).Decode(&dataTank)
 	if err != nil {
@@ -39,7 +49,7 @@ func (c *DataTankController) CreateDataTank(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(dataTank)
 }
 
-func (c *DataTankController) GetDataTanks(w http.ResponseWriter, r *http.Request) {
+func (c *dataTankController) GetDataTanks(w http.ResponseWriter, r *http.Request) {
 	dataTanks, err := c.DataTankUsecase.GetDataTanks()
 	if err != nil {
 		http.Error(w, "Failed to fetch DataTanks", http.StatusInternalServerError)
@@ -50,7 +60,7 @@ func (c *DataTankController) GetDataTanks(w http.ResponseWriter, r *http.Request
 	json.NewEncoder(w).Encode(dataTanks)
 }
 
-func (c *DataTankController) UpdateDataTank(w http.ResponseWriter, r *http.Request) {
+func (c *dataTankController) UpdateDataTank(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, err := strconv.Atoi(params["id"])
 	if err != nil {
@@ -76,7 +86,7 @@ func (c *DataTankController) UpdateDataTank(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(dataTank)
 }
 
-func (c *DataTankController) DeleteDataTank(w http.ResponseWriter, r *http.Request) {
+func (c *dataTankController) DeleteDataTank(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, err := strconv.Atoi(params["id"])
 	if err != nil {
@@ -93,7 +103,7 @@ func (c *DataTankController) DeleteDataTank(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (c *DataTankController) ReadFromSerial(w http.ResponseWriter, r *http.Request) {
+func (c *dataTankController) ReadFromSerial(w http.ResponseWriter, r *http.Request) {
 	data, err := c.DataTankUsecase.ReadFromSerial()
 	if err != nil {
 		http.Error(w, "Failed to read from serial", http.StatusInternalServerError)

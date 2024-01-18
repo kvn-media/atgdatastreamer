@@ -55,7 +55,7 @@ func CloseDB(db *sql.DB) {
 // PerformDatabaseMigration performs database migration
 func PerformDatabaseMigration(db *sql.DB) error {
 	// Replace the migrationDir with the actual path in your project structure
-	migrationDir := "path/to/migrations"
+	migrationDir := "internal/migration"
 
 	_, err := sqlite.WithInstance(db, &sqlite.Config{})
 	if err != nil {

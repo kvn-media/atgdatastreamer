@@ -21,13 +21,13 @@ import (
 )
 
 type App struct {
-	router *mux.Router
-	server *http.Server
-	db     *sql.DB
-	dataTankController *controllers.DataTankController
+	router             *mux.Router
+	server             *http.Server
+	db                 *sql.DB
+	dataTankController controllers.DataTankController
 }
 
-func NewApp(dataTankController *controllers.DataTankController) *App {
+func NewApp(dataTankController controllers.DataTankController) *App {
 	return &App{
 		dataTankController: dataTankController,
 	}
@@ -35,36 +35,36 @@ func NewApp(dataTankController *controllers.DataTankController) *App {
 
 func (app *App) Initialize() {
 	// Load configuration from an external file
-    config, err := configs.LoadConfig("configs/config.json")
-    if err != nil {
-        log.Fatalf("Failed to load configuration: %v", err)
-    }
+	config, err := configs.LoadConfig("configs/config.json")
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
 
-    // Initialize the database
-    app.db, err = database.InitDB(config.DBPath)
-    if err != nil {
-        log.Fatalf("Failed to initialize the database: %v", err)
-    }
-    defer database.CloseDB(app.db)
+	// Initialize the database
+	app.db, err = database.InitDB(config.DBPath)
+	if err != nil {
+		log.Fatalf("Failed to initialize the database: %v", err)
+	}
+	defer database.CloseDB(app.db)
 
-    // Initialize repository and usecase
-    dataTankRepository := repository.NewDataTankRepository(app.db)
-    serialPort := serial.NewSerialPortImpl()
-    err = serialPort.Connect(config.SerialPortName, config.SerialPortBaud)
-    if err != nil {
-        log.Fatalf("Failed to connect to the serial port: %v", err)
-    }
-    defer serialPort.Disconnect()
+	// Initialize repository and usecase
+	dataTankRepository := repository.NewDataTankRepository(app.db)
+	serialPort := serial.NewSerialPortImpl()
+	err = serialPort.Connect(config.SerialPortName, config.SerialPortBaud)
+	if err != nil {
+		log.Fatalf("Failed to connect to the serial port: %v", err)
+	}
+	defer serialPort.Disconnect()
 
-    // Initialize HTTPS Delivery
-    httpsDelivery := delivery.NewHttpsDelivery(config.HTTPSEndpoint)
+	// Initialize HTTPS Delivery
+	httpsDelivery := delivery.NewHttpsDelivery(config.HTTPSEndpoint)
 
-    dataTankUsecase := usecase.NewDataTankUsecase(dataTankRepository, serialPort, httpsDelivery)
-    app.dataTankController = controllers.NewDataTankController(dataTankUsecase)
+	dataTankUsecase := usecase.NewDataTankUsecase(dataTankRepository, serialPort, httpsDelivery)
+	app.dataTankController = controllers.NewDataTankController(dataTankUsecase)
 
-    // Initialize the router
-    app.router = mux.NewRouter()
-    app.initializeRoutes()
+	// Initialize the router
+	app.router = mux.NewRouter()
+	app.initializeRoutes()
 }
 
 // initializeRoutes menambahkan rute-rute ke router
