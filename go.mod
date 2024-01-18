@@ -2,7 +2,10 @@ module github.com/kvn-media/atgdatastreamer
 
 go 1.19
 
-require github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
+require (
+	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
+)
 
 require (
 	github.com/google/uuid v1.4.0 // indirect
@@ -10,7 +13,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/mod v0.11.0 // indirect

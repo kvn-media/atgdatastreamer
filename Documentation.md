@@ -1,127 +1,112 @@
 # ATG Data Streamer Documentation
 
-## Overview
+# Application Documentation
 
-ATG Data Streamer is a Go application designed for streaming and managing data from ATG tanks. This documentation provides information on the application's features, usage, code structure, and deployment.
+## Overview
+The ATGDataStreamer application is designed to facilitate the interaction between data tanks and a central server through a serial port. It allows for the creation, retrieval, updating, and deletion of data tanks, as well as reading and writing data to a serial port. The application is built in Go and follows a modular structure to enhance maintainability and extensibility.
 
 ## Features
-
-- **Data Management:** Create, read, update, and delete data from ATG tanks.
-- **Serial Communication:** Read data from the serial port connected to the ATG tank.
-- **HTTPS Delivery:** Send tank data securely over HTTPS.
+- **DataTank Management:** CRUD operations for managing data tanks.
+- **Serial Communication:** Read and write data to a serial port.
+- **HTTPS Delivery:** Send data to an HTTPS endpoint.
+- **Database Integration:** SQLite database for persistent storage.
+- **Graceful Shutdown:** Gracefully shutdown the server on interrupt signals.
 
 ## Table of Contents
-
 - [ATG Data Streamer Documentation](#atg-data-streamer-documentation)
+- [Application Documentation](#application-documentation)
   - [Overview](#overview)
   - [Features](#features)
   - [Table of Contents](#table-of-contents)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
+  - [Dependencies](#dependencies)
   - [Configuration](#configuration)
   - [Usage](#usage)
-    - [API Endpoints](#api-endpoints)
-    - [Postman Usage](#postman-usage)
+    - [How to Run](#how-to-run)
+    - [Access Endpoints](#access-endpoints)
+  - [API Endpoints](#api-endpoints)
+  - [Postman Usage](#postman-usage)
   - [Database Migration](#database-migration)
   - [Code Structure](#code-structure)
   - [Testing Scenarios](#testing-scenarios)
+  - [To-Do List](#to-do-list)
   - [Future Improvements](#future-improvements)
 
 ## Prerequisites
-
-Before using the application, ensure you have the following installed:
-
-- Go (Golang)
-- SQLite
+- Go programming language installed.
+- SQLite database.
 
 ## Installation
+1. Clone the repository: `git clone <repository-url>`
+2. Navigate to the project directory: `cd atgdatastreamer`
+3. Run the application: `go run main.go`
 
-Follow these steps to install the application:
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/kvn-media/atgdatastreamer.git
-   ```
-
-2. Change to the project directory:
-
-   ```bash
-   cd atgdatastreamer
-   ```
-
-3. Install dependencies:
-
-   ```bash
-   go mod tidy
-   ```
-
-4. Build the application:
-
-   ```bash
-   go build
-   ```
-
-5. Run the application:
-
-   ```bash
-   ./atgdatastreamer
-   ```
+## Dependencies
+- [github.com/gorilla/mux](https://github.com/gorilla/mux) - HTTP router
+- [github.com/patrickmn/go-cache](https://github.com/patrickmn/go-cache) - In-memory cache
+- [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3) - SQLite driver
+- [github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate) - Database migrations
 
 ## Configuration
+The application reads its configuration from an external JSON file. An example configuration file (`config.json`) is provided in the repository. Adjust the configuration values as needed.
 
-Configure the application using the `configs/config.json` file. Update parameters such as `SerialPortName`, `SerialPortBaud`, and `HTTPSEndpoint`.
-
-1. Copy the example configuration file:
-   ```bash
-   cp configs/config.example.json configs/config.json
-   ```
-2. Modify configs/config.json with your specific configuration settings.
+```json
+{
+    "db_path": "synchub.db",
+    "serial_port_name": "COM1",
+    "serial_port_baud": 9600,
+    "https_endpoint": "https://localhost:3000/receive-data"
+}
+```
 
 ## Usage
 
-### API Endpoints
-
-The application exposes the following API endpoints:
-
-- Create DataTank: `POST /data-tank`
-- Get All DataTanks: `GET /data-tank`
-- Update DataTank: `PUT /data-tank/{id}`
-- Delete DataTank: `DELETE /data-tank/{id}`
-- Read from Serial: `GET /read-serial`
-
-### Postman Usage
-
-Use [Postman](https://www.postman.com/) for convenient API testing. Import the provided [Postman collection](postman_collection.json) to quickly test the API endpoints.
-
-## Database Migration
-
-To perform database migration, run:
-
+### How to Run
 ```bash
-./atgdatastreamer migrate
+go run main.go
 ```
 
-## Code Structure
+### Access Endpoints
+- Local server: [http://localhost:8080](http://localhost:8080)
 
-The code is structured into several packages, including `application`, `controllers`, `database`, `delivery`, `repository`, `serial`, and `usecase`. Each package serves a specific purpose in the application's architecture.
+## API Endpoints
+- **POST /data-tank:** Create a new data tank.
+- **GET /data-tank:** Retrieve all data tanks.
+- **PUT /data-tank/{id}:** Update a data tank by ID.
+- **DELETE /data-tank/{id}:** Delete a data tank by ID.
+- **GET /read-serial:** Read data from the serial port.
+
+## Postman Usage
+Use Postman or a similar tool to interact with the API endpoints.
+
+## Database Migration
+The application performs automatic database migration on startup. Ensure the SQLite database is created and accessible.
+
+## Code Structure
+The project follows a modular structure:
+- **application:** Main application logic and server setup.
+- **configs:** Configuration loading.
+- **controllers:** HTTP request handlers.
+- **database:** Database initialization and migration.
+- **delivery:** Data delivery mechanisms (HTTPS, cache).
+- **models:** Data structures used in the application.
+- **repository:** Database interactions.
+- **serial:** Serial port communication.
+- **usecase:** Business logic and use case implementations.
 
 ## Testing Scenarios
-- Daily Data Collection: Simulate daily data collection from the ATG system and observe successful HTTPS transfers.
-- Invalid API Requests: Test the application's response to invalid API requests.
-- Database Migration: Verify that the database migration process completes successfully.
+- Ensure data tank creation, retrieval, update, and deletion work as expected.
+- Verify serial port communication by reading data from the serial port.
+- Check the integration with external systems through HTTPS delivery.
 
+## To-Do List
+- [ ] Implement caching for improved performance.
+- [ ] Enhance error handling and logging.
+- [ ] Add validation for API inputs.
+- [ ] Implement unit tests for critical components.
 
 ## Future Improvements
-- Enhanced Logging
-- API Authentication
-- HTTPS Configuration
-- Data Validation and Sanitization
-- Unit Tests and Test Coverage
-- Swagger/OpenAPI Documentation
-- CORS Handling
-- Graceful Shutdown
-- Containerization
-- Monitoring and Metrics
-- Continuous Integration/Continuous Deployment (CI/CD)
-- Error Handling
+- [ ] Support multiple serial ports.
+- [ ] Implement secure communication protocols.
+- [ ] Integrate with additional data sources and sinks.

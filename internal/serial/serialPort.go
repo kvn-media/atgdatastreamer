@@ -54,38 +54,57 @@ func (s *serialPort) Disconnect() error {
 	return nil
 }
 
+// StartReading starts reading data from the serial port
 func (s *serialPort) StartReading(callback func([]byte)) {
-	go func() {
-		for {
-			select {
-			case <-s.stopChan:
-				return // Stop goroutine when signaled
-			default:
-				buffer := make([]byte, 256)
-				n, err := s.port.Read(buffer)
-				if err != nil {
-					log.Printf("Error reading from serial port: %v", err)
-					return
-				}
-				callback(buffer[:n])
-			}
-		}
-	}()
+    go func() {
+        for {
+            select {
+            case <-s.stopChan:
+                return // Stop goroutine when signaled
+            default:
+                buffer := make([]byte, 256)
+                n, err := s.port.Read(buffer)
+                if err != nil {
+                    log.Printf("Error reading from serial port: %v", err)
+                    return
+                }
+
+                // Parse SS160PLUS Protocol and handle errors
+                parsedData, err := ParseSS160PLUSProtocol(buffer[:n])
+                if err != nil {
+                    log.Printf("Error parsing SS160PLUS Protocol: %v", err)
+                    continue
+                }
+
+                // Callback with parsed data
+                callback(parsedData)
+            }
+        }
+    }()
 }
 
 func (s *serialPort) StopReading() {
 	close(s.stopChan) // Signal to stop reading goroutine
 }
 
-// Read membaca data dari koneksi serial
+// Read reads data from the serial port
 func (s *serialPort) Read(callback func([]byte)) {
-	buffer := make([]byte, 256)
-	n, err := s.port.Read(buffer)
-	if err != nil {
-		log.Printf("Error reading from serial port: %v", err)
-		return
-	}
-	callback(buffer[:n])
+    buffer := make([]byte, 256)
+    n, err := s.port.Read(buffer)
+    if err != nil {
+        log.Printf("Error reading from serial port: %v", err)
+        return
+    }
+
+    // Parse SS160PLUS Protocol and handle errors
+    parsedData, err := ParseSS160PLUSProtocol(buffer[:n])
+    if err != nil {
+        log.Printf("Error parsing SS160PLUS Protocol: %v", err)
+        return
+    }
+
+    // Callback with parsed data
+    callback(parsedData)
 }
 
 // Write menulis data ke koneksi serial

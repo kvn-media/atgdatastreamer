@@ -69,24 +69,32 @@ func (u *dataTankUsecase) ReadFromSerial() ([]byte, error) {
 
 	// Callback function to be executed when data is received
 	callback := func(data []byte) {
+		// Further processing of data (e.g., storing in the database)
 		receivedData = append(receivedData, data...)
 		// Signal that data has been received
 		close(done)
 	}
 
 	// Start reading data with the provided callback
-	go u.serialPort.Read(callback)
+	go u.serialPort.StartReading(callback)
 
 	// Wait for data to be received or an error
 	select {
 	case <-done:
 		// Data received successfully
-		return receivedData, nil
+		// Further processing of receivedData (e.g., storing in the database)
+		parsedData, parseErr := serial.ParseSS160PLUSProtocol(receivedData)
+		if parseErr != nil {
+			return nil, fmt.Errorf("failed to parse received data: %v", parseErr)
+		}
+		return parsedData, nil
+
 	case <-time.After(5 * time.Second): // Adjust timeout as needed
 		// Timeout waiting for data
 		return nil, fmt.Errorf("timeout waiting for serial data")
 	}
 }
+
 func (u *dataTankUsecase) WriteToSerial(data []byte) (int, error) {
 	n, err := u.serialPort.Write(data)
 	if err != nil {
