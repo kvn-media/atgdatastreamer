@@ -79,6 +79,10 @@ The application uses SQLite. To perform database migration, run:
 
 Feel free to contribute to the project by opening issues or submitting pull requests.
 
+## Documentation
+
+see the documentation [Documentation](Documentation.md) for more information.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](license) file for details.
