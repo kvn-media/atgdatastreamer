@@ -2,6 +2,7 @@ package serial
 
 import (
 	"io"
+	"log"
 
 	"github.com/tarm/serial"
 )
@@ -9,18 +10,25 @@ import (
 type SerialPort interface {
 	Connect(portName string, baudRate int) error
 	Disconnect() error
-	Read() ([]byte, error)
+	StartReading(callback func([]byte))
+	StopReading()
+	Read(callback func([]byte))
 	Write(data []byte) (int, error)
 }
 
 // SerialPortImpl adalah implementasi dari SerialPort interface
 type serialPort struct {
-	port io.ReadWriteCloser
+	port     io.ReadWriteCloser
+	readChan chan []byte
+	stopChan chan struct{}
 }
 
 // NewSerialPortImpl inisialisasi SerialPortImpl
 func NewSerialPortImpl() *serialPort {
-	return &serialPort{}
+	return &serialPort{
+		readChan: make(chan []byte),
+		stopChan: make(chan struct{}),
+	}
 }
 
 // Connect membuka koneksi serial
@@ -36,29 +44,55 @@ func (s *serialPort) Connect(portName string, baudRate int) error {
 
 // Disconnect menutup koneksi serial
 func (s *serialPort) Disconnect() error {
+	close(s.stopChan) // Signal to stop reading goroutine
 	if s.port != nil {
-		return s.port.Close()
+		err := s.port.Close()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
+func (s *serialPort) StartReading(callback func([]byte)) {
+	go func() {
+		for {
+			select {
+			case <-s.stopChan:
+				return // Stop goroutine when signaled
+			default:
+				buffer := make([]byte, 256)
+				n, err := s.port.Read(buffer)
+				if err != nil {
+					log.Printf("Error reading from serial port: %v", err)
+					return
+				}
+				callback(buffer[:n])
+			}
+		}
+	}()
+}
+
+func (s *serialPort) StopReading() {
+	close(s.stopChan) // Signal to stop reading goroutine
+}
+
 // Read membaca data dari koneksi serial
-func (s *serialPort) Read() ([]byte, error) {
-	// Implementasi membaca data dari port serial
-    buffer := make([]byte, 256)
-    n, err := s.port.Read(buffer)
-    if err!= nil {
-        return nil, err
-    }
-    return buffer[:n], nil
+func (s *serialPort) Read(callback func([]byte)) {
+	buffer := make([]byte, 256)
+	n, err := s.port.Read(buffer)
+	if err != nil {
+		log.Printf("Error reading from serial port: %v", err)
+		return
+	}
+	callback(buffer[:n])
 }
 
 // Write menulis data ke koneksi serial
 func (s *serialPort) Write(data []byte) (int, error) {
-	// Implementasi menulis data ke port serial
-    n, err := s.port.Write(data)
-    if err != nil {
-        return 0, err
-    }
-    return n, nil
+	n, err := s.port.Write(data)
+	if err != nil {
+		return 0, err
+	}
+	return n, nil
 }

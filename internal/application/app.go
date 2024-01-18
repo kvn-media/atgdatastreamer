@@ -50,11 +50,17 @@ func (app *App) Initialize() {
 	// Initialize repository and usecase
 	dataTankRepository := repository.NewDataTankRepository(app.db)
 	serialPort := serial.NewSerialPortImpl()
+
 	err = serialPort.Connect(config.SerialPortName, config.SerialPortBaud)
 	if err != nil {
 		log.Fatalf("Failed to connect to the serial port: %v", err)
 	}
 	defer serialPort.Disconnect()
+
+	// // Start reading from the serial port in a goroutine
+	// go func() {
+	// 	serialPort.Read(processDataFromSerial)
+	// }()
 
 	// Initialize HTTPS Delivery
 	httpsDelivery := delivery.NewHttpsDelivery(config.HTTPSEndpoint)
