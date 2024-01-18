@@ -5,7 +5,6 @@ go 1.19
 require github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
 
 require (
-	github.com/golang-migrate/migrate v3.5.4+incompatible // indirect
 	github.com/google/uuid v1.4.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect

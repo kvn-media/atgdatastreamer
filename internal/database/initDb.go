@@ -6,18 +6,17 @@ import (
 	"path/filepath"
 
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/sqlite"
-	"github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 var db *sql.DB
 
-// InitDB inisialisasi koneksi ke SQLite dan melakukan migrasi database
+// InitDB initializes the connection to SQLite and performs database migration
 func InitDB(dbPath string) (*sql.DB, error) {
 	var err error
 
-	// Inisialisasi koneksi ke SQLite
+	// Initialize the connection to SQLite
 	db, err = sql.Open("sqlite3", dbPath)
 	if err != nil {
 		log.Fatalf("Failed to open the database: %v", err)
@@ -32,7 +31,7 @@ func InitDB(dbPath string) (*sql.DB, error) {
 
 	log.Println("Connected to the database")
 
-	// Migrasi database
+	// Perform database migration
 	err = PerformDatabaseMigration(db)
 	if err != nil {
 		log.Fatalf("Failed to perform database migration: %v", err)
@@ -42,7 +41,7 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	return db, nil
 }
 
-// CloseDB menutup koneksi database
+// CloseDB closes the database connection
 func CloseDB(db *sql.DB) {
 	if db != nil {
 		err := db.Close()
@@ -53,24 +52,20 @@ func CloseDB(db *sql.DB) {
 	}
 }
 
-// PerformDatabaseMigration melakukan migrasi database
+// PerformDatabaseMigration performs database migration
 func PerformDatabaseMigration(db *sql.DB) error {
 	// Replace the migrationDir with the actual path in your project structure
-	migrationDir := filepath.Join("path", "to", "migrations")
+	migrationDir := "path/to/migrations"
 
-	driver, err := sqliteWithInstance(db)
+	_, err := sqlite.WithInstance(db, &sqlite.Config{})
 	if err != nil {
 		return err
 	}
 
-	srcDriver, err := file.WithInstance(&migrate.FileMigrationSource{
-		Dir: migrationDir,
-	}, &file.Driver{})
-	if err != nil {
-		return err
-	}
-
-	m, err := migrate.NewWithInstance("file", srcDriver, "sqlite3", driver)
+	m, err := migrate.New(
+		"file://"+migrationDir,
+		"sqlite3://"+filepath.ToSlash("file:"+migrationDir+"?_fk=true"),
+	)
 	if err != nil {
 		return err
 	}
@@ -81,9 +76,4 @@ func PerformDatabaseMigration(db *sql.DB) error {
 	}
 
 	return nil
-}
-
-// sqliteWithInstance mengembalikan instance driver SQLite
-func sqliteWithInstance(db *sql.DB) (*sql.DB, error) {
-	return db, nil
 }

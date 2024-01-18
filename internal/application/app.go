@@ -24,56 +24,56 @@ type App struct {
 	router *mux.Router
 	server *http.Server
 	db     *sql.DB
+	dataTankController *controllers.DataTankController
 }
 
-func NewApp() *App {
-	return &App{}
+func NewApp(dataTankController *controllers.DataTankController) *App {
+	return &App{
+		dataTankController: dataTankController,
+	}
 }
 
-func (app *App) initialize() {
-	// Load konfigurasi dari file external
-	config, err := configs.LoadConfig("configs/config.json")
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
-	}
+func (app *App) Initialize() {
+	// Load configuration from an external file
+    config, err := configs.LoadConfig("configs/config.json")
+    if err != nil {
+        log.Fatalf("Failed to load configuration: %v", err)
+    }
 
-	// Inisialisasi database
-	app.db, err = database.InitDB(config.DBPath)
-	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
-	}
-	defer database.CloseDB(app.db)
+    // Initialize the database
+    app.db, err = database.InitDB(config.DBPath)
+    if err != nil {
+        log.Fatalf("Failed to initialize the database: %v", err)
+    }
+    defer database.CloseDB(app.db)
 
-	// Inisialisasi repository dan usecase
-	dataTankRepository := repository.NewDataTankRepository(app.db)
-	serialPort := serial.NewSerialPortImpl()
-	err = serialPort.Connect(config.SerialPortName, config.SerialPortBaud)
-	if err != nil {
-		log.Fatalf("Failed to connect to serial port: %v", err)
-	}
-	defer serialPort.Disconnect()
+    // Initialize repository and usecase
+    dataTankRepository := repository.NewDataTankRepository(app.db)
+    serialPort := serial.NewSerialPortImpl()
+    err = serialPort.Connect(config.SerialPortName, config.SerialPortBaud)
+    if err != nil {
+        log.Fatalf("Failed to connect to the serial port: %v", err)
+    }
+    defer serialPort.Disconnect()
 
-	// Inisialisasi HTTPS Delivery
-	httpsDelivery := delivery.NewHttpsDelivery(config.HTTPSEndpoint)
+    // Initialize HTTPS Delivery
+    httpsDelivery := delivery.NewHttpsDelivery(config.HTTPSEndpoint)
 
-	dataTankUsecase := usecase.NewDataTankUsecase(dataTankRepository, serialPort, httpsDelivery)
-	dataTankController := controllers.NewDataTankController(dataTankUsecase)
+    dataTankUsecase := usecase.NewDataTankUsecase(dataTankRepository, serialPort, httpsDelivery)
+    app.dataTankController = controllers.NewDataTankController(dataTankUsecase)
 
-	// Inisialisasi router
-	app.router = mux.NewRouter()
-	app.initializeRoutes(dataTankController)
-
+    // Initialize the router
+    app.router = mux.NewRouter()
+    app.initializeRoutes()
 }
 
 // initializeRoutes menambahkan rute-rute ke router
-func (app *App) initializeRoutes(dataTankController *controllers.DataTankController) {
-
-	app.router.HandleFunc("/data-tank", dataTankController.CreateDataTank).Methods("POST")
-	app.router.HandleFunc("/data-tank", dataTankController.GetDataTanks).Methods("GET")
-	app.router.HandleFunc("/data-tank/{id}", dataTankController.UpdateDataTank).Methods("PUT")
-	app.router.HandleFunc("/data-tank/{id}", dataTankController.DeleteDataTank).Methods("DELETE")
-	app.router.HandleFunc("/read-serial", dataTankController.ReadFromSerial).Methods("GET")
-	
+func (app *App) initializeRoutes() {
+	app.router.HandleFunc("/data-tank", app.dataTankController.CreateDataTank).Methods("POST")
+	app.router.HandleFunc("/data-tank", app.dataTankController.GetDataTanks).Methods("GET")
+	app.router.HandleFunc("/data-tank/{id}", app.dataTankController.UpdateDataTank).Methods("PUT")
+	app.router.HandleFunc("/data-tank/{id}", app.dataTankController.DeleteDataTank).Methods("DELETE")
+	app.router.HandleFunc("/read-serial", app.dataTankController.ReadFromSerial).Methods("GET")
 }
 
 // handleShutdownSignal menangani sinyal untuk graceful shutdown
@@ -100,16 +100,16 @@ func (app *App) handleShutdownSignal() {
 // Run menjalankan aplikasi
 func (app *App) Run() {
 	// Migrasi Database
-    err := database.PerformDatabaseMigration(app.db)
-    if err != nil {
-        log.Fatalf("Failed to migrate database: %v", err)
-    }
+	err := database.PerformDatabaseMigration(app.db)
+	if err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
 
 	// Inisialisasi Caching atau Message Queue
-    InitializeCache()
+	InitializeCache()
 
-    // Registrasi Middleware
-    app.router.Use(MyLoggingMiddleware)
+	// Registrasi Middleware
+	app.router.Use(MyLoggingMiddleware)
 
 	// Inisialisasi server HTTP
 	app.server = &http.Server{
