@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/kvn-media/atgdatastreamer/internal/application"
 	"github.com/kvn-media/atgdatastreamer/internal/controllers"
 	"github.com/kvn-media/atgdatastreamer/internal/database"
@@ -14,7 +16,7 @@ func main() {
 	// Create instances of dependencies
 	db, err := database.InitDB("synchub.db")
 	if err != nil {
-		// Handle the error
+		log.Fatalf("Failed to initialize the database: %v", err)
 	}
 
 	dataTankRepository := repository.NewDataTankRepository(db)
@@ -22,7 +24,7 @@ func main() {
 	serialPort := serial.NewSerialPortImpl()
 	err = serialPort.Connect("COM1", 9600)
 	if err != nil {
-		// Handle the error
+		log.Fatalf("Failed to connect serial port: %v", err)
 	}
 
 	httpsDelivery := delivery.NewHttpsDelivery("https://localhost:3000/receive-data")

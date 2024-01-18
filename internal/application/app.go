@@ -78,7 +78,7 @@ func (app *App) initializeRoutes() {
 
 // handleShutdownSignal menangani sinyal untuk graceful shutdown
 func (app *App) handleShutdownSignal() {
-	stopChan := make(chan os.Signal)
+	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
 
 	// Menunggu sinyal shutdown

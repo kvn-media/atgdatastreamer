@@ -1,15 +1,28 @@
 package application
 
 import (
-	"fmt"
+	"log"
 	"net/http"
+	"time"
 )
 
-// MyLoggingMiddleware adalah middleware untuk logging
+// MyLoggingMiddleware is middleware for logging
 func MyLoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Implementasi logging di sini
-		fmt.Println("Logging:", r.URL.Path)
+		startTime := time.Now()
+
+		// Call the next handler in the chain
 		next.ServeHTTP(w, r)
+
+		// Log information about the request
+		statusCode := w.(interface {
+			Status() int
+		}).Status()
+		elapsed := time.Since(startTime)
+
+		log.Printf(
+			"Method: %s\tPath: %s\tStatus: %d\tElapsed: %s\n",
+			r.Method, r.URL.Path, statusCode, elapsed,
+		)
 	})
 }

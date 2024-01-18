@@ -28,14 +28,14 @@ func NewDataTankRepository(db *sql.DB) *dataTankRepo {
 
 // CreateDataTank membuat data baru di database
 func (r *dataTankRepo) CreateDataTank(dataTank *models.DataTank) error {
-	_, err := r.db.Exec("INSERT INTO data_tank (field1, field2, field3) VALUES (?, ?, ?)",
-		dataTank.Field1, dataTank.Field2, dataTank.Field3)
+	_, err := r.db.Exec("INSERT INTO data_tank (ID, Level, Temperature) VALUES (?, ?, ?)",
+		dataTank.ID, dataTank.Level, dataTank.Temperature)
 	return err
 }
 
 // GetDataTanks mengambil semua data dari database
 func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
-	rows, err := r.db.Query("SELECT field1, field2, field3 FROM data_tank")
+	rows, err := r.db.Query("SELECT ID, Level, Temperature FROM data_tank")
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
 	var dataTanks []*models.DataTank
 	for rows.Next() {
 		var dt models.DataTank
-		if err := rows.Scan(&dt.Field1, &dt.Field2, &dt.Field3); err != nil {
+		if err := rows.Scan(&dt.ID, &dt.Level, &dt.Temperature); err != nil {
 			return nil, err
 		}
 		dataTanks = append(dataTanks, &dt)
@@ -54,8 +54,8 @@ func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
 
 // UpdateDataTank mengupdate data di database
 func (r *dataTankRepo) UpdateDataTank(dataTank *models.DataTank) error {
-	_, err := r.db.Exec("UPDATE data_tank SET field1=?, field2=?, field3=? WHERE id=?",
-		dataTank.Field1, dataTank.Field2, dataTank.Field3, dataTank.ID)
+	_, err := r.db.Exec("UPDATE data_tank SET ID=?, Level=?, Temperature=? WHERE id=?",
+		dataTank.ID, dataTank.Level, dataTank.Temperature, dataTank.ID)
 	return err
 }
 
