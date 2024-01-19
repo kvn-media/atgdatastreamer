@@ -40,40 +40,42 @@ func NewApp(dataTankController controllers.DataTankController, config configs.Co
 
 func (app *App) Initialize() {
 	// Initialize the database
-    var err error
-    app.db, err = database.InitDB(app.config.DBPath)
-    if err != nil {
-        log.Fatalf("Failed to initialize the database: %v", err)
-    }
+	var err error
+	app.db, err = database.InitDB(app.config.DBPath)
+	if err != nil {
+		log.Fatalf("Failed to initialize the database: %v", err)
+	}
 
-    // Defer closing the database connection at the end of the application lifecycle
-    defer database.CloseDB(app.db)
+	// Defer closing the database connection at the end of the application lifecycle
+	defer database.CloseDB(app.db)
 
-    // Initialize repository and usecase
-    dataTankRepository := repository.NewDataTankRepository(app.db)
-    serialPort := serial.NewSerialPortImpl()
+	// Initialize repository and usecase
+	dataTankRepository := repository.NewDataTankRepository(app.db)
+	serialPort := serial.NewSerialPortImpl()
 
-    err = serialPort.Connect(app.config.SerialPortName, app.config.SerialPortBaud)
-    if err != nil {
-        log.Fatalf("Failed to connect to the serial port: %v", err)
-    }
-    defer serialPort.Disconnect()
+	err = serialPort.Connect(app.config.SerialPortName, app.config.SerialPortBaud)
+	if err != nil {
+		log.Fatalf("Failed to connect to the serial port: %v", err)
+	}
+	defer serialPort.Disconnect()
 
-    // Initialize HTTPS Delivery
-    httpsDelivery := delivery.NewHttpsDelivery(app.config.HTTPSEndpoint)
+	// Initialize HTTPS Delivery
+	httpsDelivery := delivery.NewHttpsDelivery(app.config.HTTPSEndpoint)
 
-    dataTankUsecase := usecase.NewDataTankUsecase(dataTankRepository, serialPort, httpsDelivery)
-    app.dataTankController = controllers.NewDataTankController(dataTankUsecase)
+	dataTankUsecase := usecase.NewDataTankUsecase(dataTankRepository, serialPort, httpsDelivery)
+	app.dataTankController = controllers.NewDataTankController(dataTankUsecase)
 
-    // Migrate Database
-    err = database.PerformDatabaseMigration(app.db)
-    if err != nil {
-        log.Fatalf("Failed to migrate database: %v", err)
-    }
+	// Initialize the router
+	app.router = mux.NewRouter()
+	app.initializeRoutes()
 
-    // Initialize the router
-    app.router = mux.NewRouter()
-    app.initializeRoutes()
+	// Migrate Database
+	log.Println("Performing database migration...")
+	err = database.PerformDatabaseMigration(app.db)
+	if err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
+	log.Println("Database migration successful")
 }
 
 // initializeRoutes adds routes to the router
