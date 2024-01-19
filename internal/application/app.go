@@ -1,3 +1,4 @@
+// application/app.go
 package application
 
 import (
@@ -18,6 +19,8 @@ import (
 	"github.com/kvn-media/atgdatastreamer/internal/repository"
 	"github.com/kvn-media/atgdatastreamer/internal/serial"
 	"github.com/kvn-media/atgdatastreamer/internal/usecase"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type App struct {
@@ -25,55 +28,55 @@ type App struct {
 	server             *http.Server
 	db                 *sql.DB
 	dataTankController controllers.DataTankController
+	config             configs.Config
 }
 
-func NewApp(dataTankController controllers.DataTankController) *App {
+func NewApp(dataTankController controllers.DataTankController, config configs.Config) *App {
 	return &App{
 		dataTankController: dataTankController,
+		config:             config,
 	}
 }
 
 func (app *App) Initialize() {
-	// Load configuration from an external file
-	config, err := configs.LoadConfig("configs/config.json")
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
-	}
-
 	// Initialize the database
-	app.db, err = database.InitDB(config.DBPath)
-	if err != nil {
-		log.Fatalf("Failed to initialize the database: %v", err)
-	}
-	defer database.CloseDB(app.db)
+    var err error
+    app.db, err = database.InitDB(app.config.DBPath)
+    if err != nil {
+        log.Fatalf("Failed to initialize the database: %v", err)
+    }
 
-	// Initialize repository and usecase
-	dataTankRepository := repository.NewDataTankRepository(app.db)
-	serialPort := serial.NewSerialPortImpl()
+    // Defer closing the database connection at the end of the application lifecycle
+    defer database.CloseDB(app.db)
 
-	err = serialPort.Connect(config.SerialPortName, config.SerialPortBaud)
-	if err != nil {
-		log.Fatalf("Failed to connect to the serial port: %v", err)
-	}
-	defer serialPort.Disconnect()
+    // Initialize repository and usecase
+    dataTankRepository := repository.NewDataTankRepository(app.db)
+    serialPort := serial.NewSerialPortImpl()
 
-	// // Start reading from the serial port in a goroutine
-	// go func() {
-	// 	serialPort.Read(processDataFromSerial)
-	// }()
+    err = serialPort.Connect(app.config.SerialPortName, app.config.SerialPortBaud)
+    if err != nil {
+        log.Fatalf("Failed to connect to the serial port: %v", err)
+    }
+    defer serialPort.Disconnect()
 
-	// Initialize HTTPS Delivery
-	httpsDelivery := delivery.NewHttpsDelivery(config.HTTPSEndpoint)
+    // Initialize HTTPS Delivery
+    httpsDelivery := delivery.NewHttpsDelivery(app.config.HTTPSEndpoint)
 
-	dataTankUsecase := usecase.NewDataTankUsecase(dataTankRepository, serialPort, httpsDelivery)
-	app.dataTankController = controllers.NewDataTankController(dataTankUsecase)
+    dataTankUsecase := usecase.NewDataTankUsecase(dataTankRepository, serialPort, httpsDelivery)
+    app.dataTankController = controllers.NewDataTankController(dataTankUsecase)
 
-	// Initialize the router
-	app.router = mux.NewRouter()
-	app.initializeRoutes()
+    // Migrate Database
+    err = database.PerformDatabaseMigration(app.db)
+    if err != nil {
+        log.Fatalf("Failed to migrate database: %v", err)
+    }
+
+    // Initialize the router
+    app.router = mux.NewRouter()
+    app.initializeRoutes()
 }
 
-// initializeRoutes menambahkan rute-rute ke router
+// initializeRoutes adds routes to the router
 func (app *App) initializeRoutes() {
 	app.router.HandleFunc("/data-tank", app.dataTankController.CreateDataTank).Methods("POST")
 	app.router.HandleFunc("/data-tank", app.dataTankController.GetDataTanks).Methods("GET")
@@ -82,20 +85,20 @@ func (app *App) initializeRoutes() {
 	app.router.HandleFunc("/read-serial", app.dataTankController.ReadFromSerial).Methods("GET")
 }
 
-// handleShutdownSignal menangani sinyal untuk graceful shutdown
+// handleShutdownSignal handles signals for graceful shutdown
 func (app *App) handleShutdownSignal() {
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
 
-	// Menunggu sinyal shutdown
+	// Wait for shutdown signal
 	<-stopChan
 
-	// Memberikan waktu untuk menyelesaikan tugas terakhir (opsional)
+	// Allow time to finish last tasks (optional)
 	gracefulShutdownTimeout := 20 * time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), gracefulShutdownTimeout)
 	defer cancel()
 
-	// Memberhentikan server dengan timeout
+	// Shutdown the server with a timeout
 	if err := app.server.Shutdown(ctx); err != nil {
 		log.Fatalf("Server shutdown error: %v", err)
 	}
@@ -103,36 +106,30 @@ func (app *App) handleShutdownSignal() {
 	log.Println("Server gracefully stopped")
 }
 
-// Run menjalankan aplikasi
+// Run runs the application
 func (app *App) Run() {
-	// Migrasi Database
-	err := database.PerformDatabaseMigration(app.db)
-	if err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
-
-	// Inisialisasi Caching atau Message Queue
+	// Initialize Caching or Message Queue
 	InitializeCache()
 
-	// Registrasi Middleware
+	// Register Middleware
 	app.router.Use(MyLoggingMiddleware)
 
-	// Inisialisasi server HTTP
+	// Initialize HTTP server
 	app.server = &http.Server{
-		Addr:         ":8080", // Ganti dengan port yang sesuai
+		Addr:         ":8080", // Change to the appropriate port
 		Handler:      app.router,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 
-	// Jalankan server HTTP dalam goroutine
+	// Run HTTP server in a goroutine
 	go func() {
-		log.Printf("Server started on :8080\n") // Ganti dengan port yang sesuai
+		log.Printf("Server started on :8080\n") // Change to the appropriate port
 		if err := app.server.ListenAndServe(); err != nil {
 			log.Fatalf("Server error: %v", err)
 		}
 	}()
 
-	// Menangani sinyal untuk graceful shutdown
+	// Handle signals for graceful shutdown
 	app.handleShutdownSignal()
 }

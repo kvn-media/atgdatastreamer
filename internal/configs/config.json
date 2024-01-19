@@ -1,5 +1,5 @@
 {
-    "db_path": "synchub.db",
+    "db_path": "atg_data_stream.db",
     "serial_port_name": "COM1",
     "serial_port_baud": 9600,
     "https_endpoint": "https://localhost:3000/receive-data"
