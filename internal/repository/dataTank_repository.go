@@ -27,9 +27,13 @@ func NewDataTankRepository(db *sql.DB) (*dataTankRepo, error) {
 	_, err := db.Exec(`
 CREATE TABLE IF NOT EXISTS data_tank (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    capacity INTEGER NOT NULL,
-    temperature REAL
+    time timestamp,
+    Barel BIGINT NOT NULL,
+	VolumeBarel INTEGER NOT NULL,
+    AveTemperature INTEGER NOT NULL,
+    WaterDebit DECIMAL(10, 2) NOT NULL,
+	TempProduct INTEGER NOT NULL,
+    Alarm varchar(5000) NOT NULL
 )
 `)
 	if err != nil {
@@ -43,14 +47,14 @@ CREATE TABLE IF NOT EXISTS data_tank (
 
 // CreateDataTank membuat data baru di database
 func (r *dataTankRepo) CreateDataTank(dataTank *models.DataTank) error {
-	_, err := r.db.Exec("INSERT INTO data_tank (ID, Name, Capacity, Temperature) VALUES (?, ?, ?, ?)",
-		dataTank.ID, dataTank.Name, dataTank.Capacity, dataTank.Temperature)
+	_, err := r.db.Exec("INSERT INTO data_tank (ID, Time, Barel, VolumeBarel, AveTemperature, WaterDebit, TempProduct, Alarm) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		dataTank.ID, dataTank.Time, dataTank.Barel, dataTank.VolumeBarel, dataTank.AveTemperature, dataTank.WaterDebit, dataTank.TempProduct, dataTank.Alarm)
 	return err
 }
 
 // GetDataTanks mengambil semua data dari database
 func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
-	rows, err := r.db.Query("SELECT ID, Name, Capacity, Temperature FROM data_tank")
+	rows, err := r.db.Query("SELECT ID, Time, Barel, VolumeBarel, AveTemperature, WaterDebit, TempProduct, Alarm FROM data_tank")
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +63,7 @@ func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
 	var dataTanks []*models.DataTank
 	for rows.Next() {
 		var dt models.DataTank
-		if err := rows.Scan(&dt.ID, &dt.Name, &dt.Capacity, &dt.Temperature); err != nil {
+		if err := rows.Scan(&dt.ID, &dt.Time, &dt.Barel, &dt.VolumeBarel, &dt.AveTemperature, &dt.WaterDebit, &dt.TempProduct, &dt.Alarm); err != nil {
 			return nil, err
 		}
 		dataTanks = append(dataTanks, &dt)
@@ -69,8 +73,8 @@ func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
 
 // UpdateDataTank mengupdate data di database
 func (r *dataTankRepo) UpdateDataTank(dataTank *models.DataTank) error {
-	_, err := r.db.Exec("UPDATE data_tank SET ID=?, Capacity=?, Temperature=? WHERE id=?",
-		dataTank.ID, dataTank.Capacity, dataTank.Temperature, dataTank.ID)
+	_, err := r.db.Exec("UPDATE data_tank SET ID=?, Barel=?, VolumeBarel=?, AveTemperature=?, WaterDebit=?, TempProduct=?, Alarm=? WHERE ID=?",
+		dataTank.ID, dataTank.Barel, dataTank.VolumeBarel, dataTank.AveTemperature, dataTank.WaterDebit, dataTank.TempProduct, dataTank.Alarm, dataTank.ID)
 	return err
 }
 

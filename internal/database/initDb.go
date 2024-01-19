@@ -58,7 +58,8 @@ func CloseDB(db *sql.DB) {
 // PerformDatabaseMigration performs database migration
 func PerformDatabaseMigration(db *sql.DB, dbPath string) error {
 	// Replace the migrationDir with the actual path in your project structure
-	migrationDir := "internal/database/migration/000_init.sql"
+	migrationDir := "internal/database/migration"
+	// dbPath = "internal/database/schema\atg_data_stream.db"
 
 	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
 	if err != nil {
