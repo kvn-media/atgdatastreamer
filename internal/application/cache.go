@@ -29,7 +29,7 @@ func ExampleUsingCache() {
 	// Create a sample TankData instance
 	value := &models.DataTank{
 		ID:          tankID,
-		Level:       75.0,  // Example value, replace with actual data
+		Capacity:       75.0,  // Example value, replace with actual data
 		Temperature: 25.5,  // Example value, replace with actual data
 	}
 

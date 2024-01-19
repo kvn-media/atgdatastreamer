@@ -26,9 +26,10 @@ func NewDataTankRepository(db *sql.DB) (*dataTankRepo, error) {
 	// Check if the table exists, create it if not
 	_, err := db.Exec(`
 CREATE TABLE IF NOT EXISTS data_tank (
-	ID INTEGER PRIMARY KEY AUTOINCREMENT,
-	Level INTEGER,
-	Temperature INTEGER
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    capacity INTEGER NOT NULL,
+    temperature REAL
 )
 `)
 	if err != nil {
@@ -42,14 +43,14 @@ CREATE TABLE IF NOT EXISTS data_tank (
 
 // CreateDataTank membuat data baru di database
 func (r *dataTankRepo) CreateDataTank(dataTank *models.DataTank) error {
-	_, err := r.db.Exec("INSERT INTO data_tank (ID, Level, Temperature) VALUES (?, ?, ?)",
-		dataTank.ID, dataTank.Level, dataTank.Temperature)
+	_, err := r.db.Exec("INSERT INTO data_tank (ID, Name, Capacity, Temperature) VALUES (?, ?, ?, ?)",
+		dataTank.ID, dataTank.Name, dataTank.Capacity, dataTank.Temperature)
 	return err
 }
 
 // GetDataTanks mengambil semua data dari database
 func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
-	rows, err := r.db.Query("SELECT ID, Level, Temperature FROM data_tank")
+	rows, err := r.db.Query("SELECT ID, Name, Capacity, Temperature FROM data_tank")
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +59,7 @@ func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
 	var dataTanks []*models.DataTank
 	for rows.Next() {
 		var dt models.DataTank
-		if err := rows.Scan(&dt.ID, &dt.Level, &dt.Temperature); err != nil {
+		if err := rows.Scan(&dt.ID, &dt.Name, &dt.Capacity, &dt.Temperature); err != nil {
 			return nil, err
 		}
 		dataTanks = append(dataTanks, &dt)
@@ -68,8 +69,8 @@ func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
 
 // UpdateDataTank mengupdate data di database
 func (r *dataTankRepo) UpdateDataTank(dataTank *models.DataTank) error {
-	_, err := r.db.Exec("UPDATE data_tank SET ID=?, Level=?, Temperature=? WHERE id=?",
-		dataTank.ID, dataTank.Level, dataTank.Temperature, dataTank.ID)
+	_, err := r.db.Exec("UPDATE data_tank SET ID=?, Capacity=?, Temperature=? WHERE id=?",
+		dataTank.ID, dataTank.Capacity, dataTank.Temperature, dataTank.ID)
 	return err
 }
 

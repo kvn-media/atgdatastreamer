@@ -4,8 +4,9 @@ package models
 
 // DataTank adalah model untuk entitas DataTank
 type DataTank struct {
-	ID          int     `json:"id"`
-	Level       float64 `json:"level"`
-	Temperature float64 `json:"temperature"`
+	ID        int     `json:"id"`
+    Name      string  `json:"name"`
+    Capacity  int     `json:"capacity"`
+    Temperature float64 `json:"temperature"`
 	// Tambahkan field lain sesuai kebutuhan
 }

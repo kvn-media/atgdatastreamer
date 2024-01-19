@@ -9,6 +9,7 @@ The ATGDataStreamer application facilitates the interaction between data tanks a
 - **HTTPS Delivery:** Send data to an HTTPS endpoint.
 - **Database Integration:** SQLite database for persistent storage.
 - **Graceful Shutdown:** Gracefully shutdown the server on interrupt signals.
+- **Caching:** In-memory caching for improved performance.
 
 ## Table of Contents
 - [ATG Data Streamer Documentation](#atg-data-streamer-documentation)
@@ -26,6 +27,8 @@ The ATGDataStreamer application facilitates the interaction between data tanks a
   - [Postman Usage](#postman-usage)
   - [Database Migration](#database-migration)
   - [Code Structure](#code-structure)
+  - [Middleware](#middleware)
+  - [Caching](#caching)
   - [Testing Scenarios](#testing-scenarios)
   - [To-Do List](#to-do-list)
   - [Future Improvements](#future-improvements)
@@ -51,7 +54,7 @@ The application reads its configuration from an external JSON file. An example c
 
 ```json
 {
-    "db_path": "synchub.db",
+    "db_path": "internal/database/schema/atg_data_stream.db",
     "serial_port_name": "COM1",
     "serial_port_baud": 9600,
     "https_endpoint": "https://localhost:3000/receive-data"
@@ -93,21 +96,31 @@ The project follows a modular structure:
 - **serial:** Serial port communication.
 - **usecase:** Business logic and use case implementations.
 
+## Middleware
+The application utilizes middleware for logging. The `MyLoggingMiddleware` middleware logs information about each incoming request.
+
+## Caching
+The application implements an in-memory cache using the `github.com/patrickmn/go-cache` library. The cache is initialized with a default expiration time of 5 minutes.
+
 ## Testing Scenarios
 - Ensure data tank creation, retrieval, update, and deletion work as expected.
 - Verify serial port communication by reading data from the serial port.
-- Check the integration with external systems through HTTPS delivery.
+- Test HTTPS data delivery.
+- Evaluate database migration functionality.
 
 ## To-Do List
-- [ ] Implement caching for improved performance.
-- [ ] Enhance error handling and logging.
+- [x] Implement caching for improved performance.
+- [x] Enhance error handling and logging.
 - [ ] Add validation for API inputs.
 - [ ] Implement unit tests for critical components.
+- [ ] Implement authentication for secure access.
+- [ ] Implement HTTPS server for improved security.
 
 ## Future Improvements
-- [ ] Support multiple serial ports.
-- [ ] Implement secure communication protocols.
 - [ ] Integrate with additional data sources and sinks.
+- [ ] Integration with other data delivery mechanisms.
+- [ ] Dockerization for easy deployment.
+- [ ] Support for additional database systems.
 
 ## Code Flow
 The following is a simplified flow of the application code:
@@ -137,7 +150,7 @@ The following is a simplified flow of the application code:
 5. **Repository Interaction (repository/data_tank_repository.go):**
    - Perform CRUD operations on the SQLite database.
 
-6. **Serial Port Communication (serial/serial_port_impl.go):**
+6. **Serial Port Communication (serial/serialPort.go):**
    - Connect to the specified serial port.
    - Read and write data.
 

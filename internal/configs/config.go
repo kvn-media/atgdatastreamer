@@ -16,10 +16,10 @@ type Config struct {
 }
 
 // LoadConfig membaca konfigurasi dari file eksternal
-func LoadConfig(path string) (Config, error) {
+func LoadConfig(DBPath string) (Config, error) {
 	var config Config
 
-	file, err := os.Open(path)
+	file, err := os.Open(DBPath)
 	if err != nil {
 		return config, err
 	}
