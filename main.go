@@ -14,37 +14,44 @@ import (
 )
 
 func main() {
-	// Create instances of dependencies
+	// Load configuration
 	config, err := configs.LoadConfig("internal/configs/config.json")
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
+	// Initialize the database
 	db, err := database.InitDB(config.DBPath)
 	if err != nil {
 		log.Fatalf("Failed to initialize the database: %v", err)
 	}
+	defer database.CloseDB(db)
 
-	dataTankRepository := repository.NewDataTankRepository(db)
+	// Create repository
+	dataTankRepository, err := repository.NewDataTankRepository(db)
+	if err != nil {
+		log.Fatalf("Failed to create data tank repository: %v", err)
+	}
 
+	// Create serial port
 	serialPort := serial.NewSerialPortImpl()
 	err = serialPort.Connect(config.SerialPortName, config.SerialPortBaud)
 	if err != nil {
 		log.Fatalf("Failed to connect serial port: %v", err)
 	}
+	defer serialPort.Disconnect()
 
+	// Create HTTPS delivery
 	httpsDelivery := delivery.NewHttpsDelivery(config.HTTPSEndpoint)
 
-	// Create an instance of DataTankUsecase and pass dependencies to it
+	// Create use case
 	dataTankUsecase := usecase.NewDataTankUsecase(dataTankRepository, serialPort, httpsDelivery)
 
-	// Create an instance of DataTankController and pass DataTankUsecase to it
+	// Create controller
 	dataTankController := controllers.NewDataTankController(dataTankUsecase)
 
-	// Create an instance of App and pass DataTankController to it
+	// Create and run the application
 	app := application.NewApp(dataTankController, config)
-
-	// Initialize and run the application
 	app.Initialize()
 	app.Run()
 }

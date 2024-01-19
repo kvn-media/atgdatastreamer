@@ -1,3 +1,5 @@
+// internal/repository/dataTank_repository.go
+
 package repository
 
 import (
@@ -20,10 +22,22 @@ type dataTankRepo struct {
 }
 
 // NewDataTankRepository inisialisasi DataTankRepository
-func NewDataTankRepository(db *sql.DB) *dataTankRepo {
+func NewDataTankRepository(db *sql.DB) (*dataTankRepo, error) {
+	// Check if the table exists, create it if not
+	_, err := db.Exec(`
+CREATE TABLE IF NOT EXISTS data_tank (
+	ID INTEGER PRIMARY KEY AUTOINCREMENT,
+	Level INTEGER,
+	Temperature INTEGER
+)
+`)
+	if err != nil {
+		return nil, err
+	}
+
 	return &dataTankRepo{
 		db: db,
-	}
+	}, nil
 }
 
 // CreateDataTank membuat data baru di database

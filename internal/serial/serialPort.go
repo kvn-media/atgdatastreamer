@@ -1,3 +1,5 @@
+// internal/serial/serialPort.go
+
 package serial
 
 import (

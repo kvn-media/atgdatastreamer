@@ -20,7 +20,6 @@ import (
 	"github.com/kvn-media/atgdatastreamer/internal/serial"
 	"github.com/kvn-media/atgdatastreamer/internal/usecase"
 
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type App struct {
@@ -49,8 +48,19 @@ func (app *App) Initialize() {
 	// Defer closing the database connection at the end of the application lifecycle
 	defer database.CloseDB(app.db)
 
+	// Migrate Database
+	log.Println("Performing database migration...")
+	err = database.PerformDatabaseMigration(app.db, app.config.DBPath)
+	if err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
+	log.Println("Database migration successful")
+
 	// Initialize repository and usecase
-	dataTankRepository := repository.NewDataTankRepository(app.db)
+	dataTankRepository, err := repository.NewDataTankRepository(app.db)
+	if err != nil {
+		log.Fatalf("Failed to create data tank repository: %v", err)
+	}
 	serialPort := serial.NewSerialPortImpl()
 
 	err = serialPort.Connect(app.config.SerialPortName, app.config.SerialPortBaud)
@@ -68,14 +78,6 @@ func (app *App) Initialize() {
 	// Initialize the router
 	app.router = mux.NewRouter()
 	app.initializeRoutes()
-
-	// Migrate Database
-	log.Println("Performing database migration...")
-	err = database.PerformDatabaseMigration(app.db)
-	if err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
-	log.Println("Database migration successful")
 }
 
 // initializeRoutes adds routes to the router

@@ -1,9 +1,7 @@
 # ATG Data Streamer Documentation
 
-# Application Documentation
-
 ## Overview
-The ATGDataStreamer application is designed to facilitate the interaction between data tanks and a central server through a serial port. It allows for the creation, retrieval, updating, and deletion of data tanks, as well as reading and writing data to a serial port. The application is built in Go and follows a modular structure to enhance maintainability and extensibility.
+The ATGDataStreamer application facilitates the interaction between data tanks and a central server through a serial port. It allows for the creation, retrieval, updating, and deletion of data tanks, as well as reading and writing data to a serial port. The application is built in Go and follows a modular structure to enhance maintainability and extensibility.
 
 ## Features
 - **DataTank Management:** CRUD operations for managing data tanks.
@@ -14,7 +12,6 @@ The ATGDataStreamer application is designed to facilitate the interaction betwee
 
 ## Table of Contents
 - [ATG Data Streamer Documentation](#atg-data-streamer-documentation)
-- [Application Documentation](#application-documentation)
   - [Overview](#overview)
   - [Features](#features)
   - [Table of Contents](#table-of-contents)
@@ -32,6 +29,7 @@ The ATGDataStreamer application is designed to facilitate the interaction betwee
   - [Testing Scenarios](#testing-scenarios)
   - [To-Do List](#to-do-list)
   - [Future Improvements](#future-improvements)
+  - [Code Flow](#code-flow)
 
 ## Prerequisites
 - Go programming language installed.
@@ -110,3 +108,49 @@ The project follows a modular structure:
 - [ ] Support multiple serial ports.
 - [ ] Implement secure communication protocols.
 - [ ] Integrate with additional data sources and sinks.
+
+## Code Flow
+The following is a simplified flow of the application code:
+
+1. **Main Execution (main.go
+
+):**
+   - Load configuration.
+   - Initialize the database.
+   - Create repository, serial port, HTTPS delivery, use case, and controller instances.
+   - Initialize and run the application.
+
+2. **Application Initialization (application/app.go):**
+   - Set up routes and handlers.
+   - Perform database migration.
+   - Start the HTTP server.
+
+3. **Controller Handling (controllers/data_tank_controller.go):**
+   - Receive HTTP requests.
+   - Invoke corresponding use case methods.
+
+4. **Use Case Execution (usecase/data_tank_usecase.go):**
+   - Implement business logic.
+   - Interact with the repository for data storage.
+   - Communicate with the serial port and deliver data via HTTPS.
+
+5. **Repository Interaction (repository/data_tank_repository.go):**
+   - Perform CRUD operations on the SQLite database.
+
+6. **Serial Port Communication (serial/serial_port_impl.go):**
+   - Connect to the specified serial port.
+   - Read and write data.
+
+7. **HTTPS Delivery (delivery/https_delivery.go):**
+   - Send data to the configured HTTPS endpoint.
+
+8. **Database Initialization (database/database.go):**
+   - Initialize and migrate the SQLite database.
+
+9. **Configuration Loading (configs/config_loader.go):**
+   - Load the application configuration from a JSON file.
+
+10. **Model Definitions (models/data_tank.go):**
+   - Define data structures used in the application.
+
+This flow represents the key components and their interactions within the ATGDataStreamer application.

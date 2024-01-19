@@ -1,4 +1,4 @@
-// serial/ss160plus_parser.go
+// internal/serial/ss160plus_parser.go
 
 package serial
 

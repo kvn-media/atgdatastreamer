@@ -32,6 +32,6 @@ require (
 require (
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/gorilla/mux v1.8.1
-	github.com/mattn/go-sqlite3 v1.14.19 // indirect
+	github.com/mattn/go-sqlite3 v1.14.19
 	golang.org/x/sys v0.16.0 // indirect
 )

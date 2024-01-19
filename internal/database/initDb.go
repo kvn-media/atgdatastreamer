@@ -1,9 +1,12 @@
+// internal/database/initDb.go
+
 package database
 
 import (
 	"database/sql"
 	"log"
-	"path/filepath"
+
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
@@ -32,7 +35,7 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	log.Println("Connected to the database")
 
 	// Perform database migration
-	err = PerformDatabaseMigration(db)
+	err = PerformDatabaseMigration(db, dbPath)
 	if err != nil {
 		log.Fatalf("Failed to perform database migration: %v", err)
 		return nil, err
@@ -53,18 +56,19 @@ func CloseDB(db *sql.DB) {
 }
 
 // PerformDatabaseMigration performs database migration
-func PerformDatabaseMigration(db *sql.DB) error {
+func PerformDatabaseMigration(db *sql.DB, dbPath string) error {
 	// Replace the migrationDir with the actual path in your project structure
 	migrationDir := "internal/migration"
 
-	_, err := sqlite.WithInstance(db, &sqlite.Config{})
+	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
 	if err != nil {
 		return err
 	}
 
-	m, err := migrate.New(
+	m, err := migrate.NewWithDatabaseInstance(
 		"file://"+migrationDir,
-		"sqlite3://"+filepath.ToSlash("file:"+migrationDir+"?_fk=true"),
+		"sqlite3:///"+dbPath+"?_fk=true", // Updated SQLite driver URL
+		driver,
 	)
 	if err != nil {
 		return err
