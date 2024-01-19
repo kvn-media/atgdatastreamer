@@ -9,7 +9,7 @@ import (
 
 // Config adalah struktur untuk menyimpan konfigurasi aplikasi
 type Config struct {
-	DBPath         string `json:"db_path"`
+	DBPath         string `json:"dbPath"`
 	SerialPortName string `json:"serial_port_name"`
 	SerialPortBaud int    `json:"serial_port_baud"`
 	HTTPSEndpoint  string `json:"https_endpoint"`
