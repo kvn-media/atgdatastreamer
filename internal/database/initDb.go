@@ -17,14 +17,14 @@ func RunMigrations(db *gorm.DB) {
 	// AutoMigrate will create the table if it does not exist and add missing fields
 	db.AutoMigrate(&models.DataTank{})
 
-	// You can also use `Migrator` to perform more complex migrations
-	migrator := db.Migrator()
-	if migrator.HasTable(&models.DataTank{}) {
-		// Add your update statements here if needed
-		// For example, if you want to add a new column named 'NewColumn'
-		// you can use the following:
-		// migrator.AddColumn(&models.DataTank{}, "NewColumn", &models.DataTank{}.NewColumn)
-	}
+	// // You can also use `Migrator` to perform more complex migrations
+	// migrator := db.Migrator()
+	// if migrator.HasTable(&models.DataTank{}) {
+	// 	// Add your update statements here if needed
+	// 	// For example, if you want to add a new column named 'NewColumn'
+	// 	// you can use the following:
+	// 	// migrator.AddColumn(&models.DataTank{}, "NewColumn", &models.DataTank{}.NewColumn)
+	// }
 
 	// Add more AutoMigrate or update statements for other models if needed
 }
@@ -38,7 +38,9 @@ func TruncateTables(db *gorm.DB, tables ...interface{}) error {
 			}
 			// If you're using SQLite, you might need to reset the auto-increment counter
 			// Uncomment the line below if needed
-			// tx.Exec("DELETE FROM sqlite_sequence WHERE name=?", table)
+			if err := tx.Exec("DELETE FROM sqlite_sequence WHERE name=?", table).Error; err != nil {
+				return err
+			}
 		}
 		return nil
 	})

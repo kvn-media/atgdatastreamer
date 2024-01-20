@@ -54,7 +54,8 @@ The ATGDataStreamer application facilitates the interaction between data tanks a
 Clone the repository and navigate to the project directory.
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/kvn-media/atgdatastreamer.git
+
 cd atgdatastreamer
 ```
 
@@ -64,6 +65,7 @@ The project relies on the following external packages:
 - [gorm.io/gorm](https://gorm.io/) - Object-relational mapping library for Golang
 - [patrickmn/go-cache](https://github.com/patrickmn/go-cache) - In-memory key/value cache
 - [gorm.io/driver/sqlite](https://github.com/go-gorm/sqlite) - Gorm driver for SQLite
+- [go-serial/serial](https://github.com/go-serial/serial) - Package for serial port communication
 
 Install dependencies using the following command:
 
@@ -72,6 +74,7 @@ go get -u github.com/gorilla/mux
 go get -u gorm.io/gorm
 go get -u github.com/patrickmn/go-cache
 go get -u gorm.io/driver/sqlite
+go get -u github.com/go-serial/serial
 ```
 
 ## Configuration
