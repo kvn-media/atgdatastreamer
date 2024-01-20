@@ -3,30 +3,41 @@
 package database
 
 import (
-	"database/sql"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3"
-
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/kvn-media/atgdatastreamer/internal/models"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
-var db *sql.DB
+var db *gorm.DB
 
 // InitDB initializes the connection to SQLite and performs database migration
-func InitDB(dbPath string) (*sql.DB, error) {
+func InitDB(dbPath string) (*gorm.DB, error) {
 	var err error
 
-	// Initialize the connection to SQLite
-	db, err = sql.Open("sqlite3", dbPath)
+	// Initialize the connection to SQLite using GORM
+	db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to open the database: %v", err)
 		return nil, err
 	}
 
-	err = db.Ping()
+	// Perform automatic migration using GORM
+	err = db.AutoMigrate(&models.DataTank{})
+	if err != nil {
+		log.Fatalf("Failed to auto-migrate database: %v", err)
+		return nil, err
+	}
+
+	// Ping the database to ensure the connection is established
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Fatalf("Failed to get underlying DB: %v", err)
+		return nil, err
+	}
+
+	err = sqlDB.Ping()
 	if err != nil {
 		log.Fatalf("Failed to ping the database: %v", err)
 		return nil, err
@@ -34,51 +45,21 @@ func InitDB(dbPath string) (*sql.DB, error) {
 
 	log.Println("Connected to the database")
 
-	// Perform database migration
-	err = PerformDatabaseMigration(db, dbPath)
-	if err != nil {
-		log.Fatalf("Failed to perform database migration: %v", err)
-		return nil, err
-	}
-
 	return db, nil
 }
 
 // CloseDB closes the database connection
-func CloseDB(db *sql.DB) {
+func CloseDB(db *gorm.DB) {
 	if db != nil {
-		err := db.Close()
+		sqlDB, err := db.DB()
+		if err != nil {
+			log.Fatalf("Error while closing the database: %v", err)
+		}
+
+		err = sqlDB.Close()
 		if err != nil {
 			log.Fatalf("Error while closing the database: %v", err)
 		}
 		log.Println("Connection to the database closed")
 	}
-}
-
-// PerformDatabaseMigration performs database migration
-func PerformDatabaseMigration(db *sql.DB, dbPath string) error {
-	// Replace the migrationDir with the actual path in your project structure
-	migrationDir := "internal/database/migration"
-	// dbPath = "internal/database/schema\atg_data_stream.db"
-
-	driver, err := sqlite.WithInstance(db, &sqlite.Config{})
-	if err != nil {
-		return err
-	}
-
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://"+migrationDir,
-		"sqlite3:///"+dbPath+"?_fk=true", // Updated SQLite driver URL
-		driver,
-	)
-	if err != nil {
-		return err
-	}
-
-	err = m.Up()
-	if err != nil && err != migrate.ErrNoChange {
-		return err
-	}
-
-	return nil
 }

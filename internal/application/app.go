@@ -3,7 +3,6 @@ package application
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -19,13 +18,13 @@ import (
 	"github.com/kvn-media/atgdatastreamer/internal/repository"
 	"github.com/kvn-media/atgdatastreamer/internal/serial"
 	"github.com/kvn-media/atgdatastreamer/internal/usecase"
-
+	"gorm.io/gorm"
 )
 
 type App struct {
 	router             *mux.Router
 	server             *http.Server
-	db                 *sql.DB
+	db                 *gorm.DB
 	dataTankController controllers.DataTankController
 	config             configs.Config
 }
@@ -47,14 +46,6 @@ func (app *App) Initialize() {
 
 	// Defer closing the database connection at the end of the application lifecycle
 	defer database.CloseDB(app.db)
-
-	// Migrate Database
-	log.Println("Performing database migration...")
-	err = database.PerformDatabaseMigration(app.db, app.config.DBPath)
-	if err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
-	log.Println("Database migration successful")
 
 	// Initialize repository and usecase
 	dataTankRepository, err := repository.NewDataTankRepository(app.db)

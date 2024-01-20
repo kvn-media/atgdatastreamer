@@ -3,9 +3,8 @@
 package repository
 
 import (
-	"database/sql"
-
 	"github.com/kvn-media/atgdatastreamer/internal/models"
+	"gorm.io/gorm"
 )
 
 // DataTankRepository adalah interface untuk entitas DataTank
@@ -18,24 +17,13 @@ type DataTankRepository interface {
 
 // DataTankRepository adalah repository untuk entitas DataTank
 type dataTankRepo struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
-// NewDataTankRepository inisialisasi DataTankRepository
-func NewDataTankRepository(db *sql.DB) (*dataTankRepo, error) {
-	// Check if the table exists, create it if not
-	_, err := db.Exec(`
-CREATE TABLE IF NOT EXISTS data_tank (
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-    time timestamp,
-    Barel BIGINT NOT NULL,
-	VolumeBarel INTEGER NOT NULL,
-    AveTemperature INTEGER NOT NULL,
-    WaterDebit DECIMAL(10, 2) NOT NULL,
-	TempProduct INTEGER NOT NULL,
-    Alarm varchar(5000) NOT NULL
-)
-`)
+// NewDataTankRepository initializes DataTankRepository
+func NewDataTankRepository(db *gorm.DB) (*dataTankRepo, error) {
+	// Auto Migrate will create the table. If it already exists, it won't do anything.
+	err := db.AutoMigrate(&models.DataTank{})
 	if err != nil {
 		return nil, err
 	}
@@ -45,41 +33,27 @@ CREATE TABLE IF NOT EXISTS data_tank (
 	}, nil
 }
 
-// CreateDataTank membuat data baru di database
+// CreateDataTank creates a new data tank in the database
 func (r *dataTankRepo) CreateDataTank(dataTank *models.DataTank) error {
-	_, err := r.db.Exec("INSERT INTO data_tank (ID, Time, Barel, VolumeBarel, AveTemperature, WaterDebit, TempProduct, Alarm) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-		dataTank.ID, dataTank.Time, dataTank.Barel, dataTank.VolumeBarel, dataTank.AveTemperature, dataTank.WaterDebit, dataTank.TempProduct, dataTank.Alarm)
-	return err
+	return r.db.Create(dataTank).Error
 }
 
-// GetDataTanks mengambil semua data dari database
+// GetDataTanks retrieves all data tanks from the database
 func (r *dataTankRepo) GetDataTanks() ([]*models.DataTank, error) {
-	rows, err := r.db.Query("SELECT ID, Time, Barel, VolumeBarel, AveTemperature, WaterDebit, TempProduct, Alarm FROM data_tank")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 	var dataTanks []*models.DataTank
-	for rows.Next() {
-		var dt models.DataTank
-		if err := rows.Scan(&dt.ID, &dt.Time, &dt.Barel, &dt.VolumeBarel, &dt.AveTemperature, &dt.WaterDebit, &dt.TempProduct, &dt.Alarm); err != nil {
-			return nil, err
-		}
-		dataTanks = append(dataTanks, &dt)
+	err := r.db.Find(&dataTanks).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
 	}
 	return dataTanks, nil
 }
 
-// UpdateDataTank mengupdate data di database
+// UpdateDataTank updates data in the database
 func (r *dataTankRepo) UpdateDataTank(dataTank *models.DataTank) error {
-	_, err := r.db.Exec("UPDATE data_tank SET ID=?, Barel=?, VolumeBarel=?, AveTemperature=?, WaterDebit=?, TempProduct=?, Alarm=? WHERE ID=?",
-		dataTank.ID, dataTank.Barel, dataTank.VolumeBarel, dataTank.AveTemperature, dataTank.WaterDebit, dataTank.TempProduct, dataTank.Alarm, dataTank.ID)
-	return err
+	return r.db.Save(dataTank).Error
 }
 
-// DeleteDataTank menghapus data dari database
+// DeleteDataTank deletes data from the database
 func (r *dataTankRepo) DeleteDataTank(id int) error {
-	_, err := r.db.Exec("DELETE FROM data_tank WHERE id=?", id)
-	return err
+	return r.db.Delete(&models.DataTank{}, id).Error
 }

@@ -23,14 +23,29 @@ func InitializeCache() {
 // Example of using the cache
 func ExampleUsingCache() {
 	// Assuming you have a tank with ID 123 and some associated data
-	tankID := 123
+	var (
+		tankID = 1
+		timeStamp = time.Now
+		barel = 1000
+		volumeBar = -20
+		aveTemperature = 20
+		waterBar = 0.1
+		tempProduct = 30
+		notification = "Tidak ada"
+	) 
+	
 	key := fmt.Sprintf("tankData:%d", tankID)
 
 	// Create a sample TankData instance
 	value := &models.DataTank{
 		ID:          tankID,
-		Capacity:       75.0,  // Example value, replace with actual data
-		Temperature: 25.5,  // Example value, replace with actual data
+		Time: timeStamp(),
+		Barel: int64(barel),
+		VolumeBarel: volumeBar,
+		AveTemperature: aveTemperature,
+		WaterDebit: int64(waterBar),
+		TempProduct: tempProduct,
+		Alarm: notification,
 	}
 
 	// Store the TankData instance in the cache

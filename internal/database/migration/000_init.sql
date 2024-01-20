@@ -2,10 +2,11 @@
 
 CREATE TABLE IF NOT EXISTS data_tank (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-    `time` timestamp,
-    Barel INTEGER NOT NULL,
-	Volume INTEGER NOT NULL,
-    Temperature REAL NOT NULL,
-    WaterDebit REAL NOT NULL,
+    time timestamp,
+    Barel BIGINT NOT NULL,
+	VolumeBarel INTEGER NOT NULL,
+    AveTemperature INTEGER NOT NULL,
+    WaterDebit DECIMAL(10, 2) NOT NULL,
+	TempProduct INTEGER NOT NULL,
     Alarm varchar(5000) NOT NULL
 );
