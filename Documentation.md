@@ -63,6 +63,7 @@ The project relies on the following external packages:
 - [gorilla/mux](https://github.com/gorilla/mux) - HTTP router and dispatcher
 - [gorm.io/gorm](https://gorm.io/) - Object-relational mapping library for Golang
 - [patrickmn/go-cache](https://github.com/patrickmn/go-cache) - In-memory key/value cache
+- [gorm.io/driver/sqlite](https://github.com/go-gorm/sqlite) - Gorm driver for SQLite
 
 Install dependencies using the following command:
 
@@ -70,6 +71,7 @@ Install dependencies using the following command:
 go get -u github.com/gorilla/mux
 go get -u gorm.io/gorm
 go get -u github.com/patrickmn/go-cache
+go get -u gorm.io/driver/sqlite
 ```
 
 ## Configuration

@@ -12,6 +12,44 @@ import (
 
 var db *gorm.DB
 
+// RunMigrations runs all database migrations
+func RunMigrations(db *gorm.DB) {
+	// AutoMigrate will create the table if it does not exist and add missing fields
+	db.AutoMigrate(&models.DataTank{})
+
+	// You can also use `Migrator` to perform more complex migrations
+	migrator := db.Migrator()
+	if migrator.HasTable(&models.DataTank{}) {
+		// Add your update statements here if needed
+		// For example, if you want to add a new column named 'NewColumn'
+		// you can use the following:
+		// migrator.AddColumn(&models.DataTank{}, "NewColumn", &models.DataTank{}.NewColumn)
+	}
+
+	// Add more AutoMigrate or update statements for other models if needed
+}
+
+// TruncateTables truncates the specified tables
+func TruncateTables(db *gorm.DB, tables ...interface{}) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
+		for _, table := range tables {
+			if err := tx.Exec("DELETE FROM ?", table).Error; err != nil {
+				return err
+			}
+			// If you're using SQLite, you might need to reset the auto-increment counter
+			// Uncomment the line below if needed
+			// tx.Exec("DELETE FROM sqlite_sequence WHERE name=?", table)
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatalf("Error truncating tables: %v", err)
+		return err
+	}
+	log.Println("Tables truncated successfully")
+	return nil
+}
+
 // InitDB initializes the connection to SQLite and performs database migration
 func InitDB(dbPath string) (*gorm.DB, error) {
 	var err error
@@ -24,11 +62,7 @@ func InitDB(dbPath string) (*gorm.DB, error) {
 	}
 
 	// Perform automatic migration using GORM
-	err = db.AutoMigrate(&models.DataTank{})
-	if err != nil {
-		log.Fatalf("Failed to auto-migrate database: %v", err)
-		return nil, err
-	}
+	RunMigrations(db)
 
 	// Ping the database to ensure the connection is established
 	sqlDB, err := db.DB()
