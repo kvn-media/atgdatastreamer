@@ -2,5 +2,6 @@
     "dbPath": "internal/database/schema/atg_data_stream.db",
     "serial_port_name": "COM1",
     "serial_port_baud": 9600,
-    "https_endpoint": "https://localhost:3000/receive-data"
+    "https_endpoint": "https://localhost:3000/receive-data",
+    "graceful_shutdown_timeout": 10
 }

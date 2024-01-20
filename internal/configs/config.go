@@ -5,6 +5,7 @@ package configs
 import (
 	"encoding/json"
 	"os"
+	"time"
 )
 
 // Config adalah struktur untuk menyimpan konfigurasi aplikasi
@@ -13,6 +14,9 @@ type Config struct {
 	SerialPortName string `json:"serial_port_name"`
 	SerialPortBaud int    `json:"serial_port_baud"`
 	HTTPSEndpoint  string `json:"https_endpoint"`
+
+	// New field for graceful shutdown timeout in seconds
+	GracefulShutdownTimeout time.Duration `json:"graceful_shutdown_timeout"`
 }
 
 // LoadConfig membaca konfigurasi dari file eksternal

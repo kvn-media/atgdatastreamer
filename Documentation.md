@@ -4,12 +4,15 @@
 The ATGDataStreamer application facilitates the interaction between data tanks and a central server through a serial port. It allows for the creation, retrieval, updating, and deletion of data tanks, as well as reading and writing data to a serial port. The application is built in Go and follows a modular structure to enhance maintainability and extensibility.
 
 ## Features
-- **DataTank Management:** CRUD operations for managing data tanks.
-- **Serial Communication:** Read and write data to a serial port.
-- **HTTPS Delivery:** Send data to an HTTPS endpoint.
-- **Database Integration:** SQLite database for persistent storage.
-- **Graceful Shutdown:** Gracefully shutdown the server on interrupt signals.
-- **Caching:** In-memory caching for improved performance.
+
+- CRUD operations for data tanks
+- Read data from the serial port and store it in the database
+- Send data to a specified HTTPS endpoint for external integration
+- Logging middleware for HTTP requests
+- Graceful shutdown handling for server
+- Database initialization and migration
+- Caching mechanism for optimized data retrieval
+- Use of Gorilla Mux for routing
 
 ## Table of Contents
 - [ATG Data Streamer Documentation](#atg-data-streamer-documentation)
@@ -17,153 +20,174 @@ The ATGDataStreamer application facilitates the interaction between data tanks a
   - [Features](#features)
   - [Table of Contents](#table-of-contents)
   - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
+  - [Installation Package](#installation-package)
   - [Dependencies](#dependencies)
   - [Configuration](#configuration)
   - [Usage](#usage)
-    - [How to Run](#how-to-run)
+    - [How to Run the Application](#how-to-run-the-application)
+    - [Build Application](#build-application)
     - [Access Endpoints](#access-endpoints)
-  - [API Endpoints](#api-endpoints)
-  - [Postman Usage](#postman-usage)
+    - [API Endpoints](#api-endpoints)
+    - [Postman Usage](#postman-usage)
   - [Database Migration](#database-migration)
   - [Code Structure](#code-structure)
   - [Middleware](#middleware)
   - [Caching](#caching)
   - [Testing Scenarios](#testing-scenarios)
+    - [Scenario 1: Create Tank Data](#scenario-1-create-tank-data)
+    - [Scenario 2: Read Tank Data](#scenario-2-read-tank-data)
+    - [Scenario 3: Update Tank Data](#scenario-3-update-tank-data)
+    - [Scenario 4: Delete Tank Data](#scenario-4-delete-tank-data)
+    - [Scenario 5: Read from Serial](#scenario-5-read-from-serial)
+  - [Mock-up Testing](#mock-up-testing)
   - [To-Do List](#to-do-list)
   - [Future Improvements](#future-improvements)
-  - [Code Flow](#code-flow)
+  - [Program Flow Explanation](#program-flow-explanation)
 
 ## Prerequisites
-- Go programming language installed.
-- SQLite database.
+- Go programming language installed
+- Database (SQLite) for storing tank data
+- Serial port connected to the ATG system
+- HTTPS endpoint for data delivery
 
-## Installation
-1. Clone the repository: `git clone <repository-url>`
-2. Navigate to the project directory: `cd atgdatastreamer`
-3. Run the application: `go run main.go`
+## Installation Package
+Clone the repository and navigate to the project directory.
+
+```bash
+git clone <repository-url>
+cd atgdatastreamer
+```
 
 ## Dependencies
-- [github.com/gorilla/mux](https://github.com/gorilla/mux) - HTTP router
-- [github.com/patrickmn/go-cache](https://github.com/patrickmn/go-cache) - In-memory cache
-- [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3) - SQLite driver
-- [github.com/golang-migrate/migrate](https://github.com/golang-migrate/migrate) - Database migrations
+The project relies on the following external packages:
+- [gorilla/mux](https://github.com/gorilla/mux) - HTTP router and dispatcher
+- [gorm.io/gorm](https://gorm.io/) - Object-relational mapping library for Golang
+- [patrickmn/go-cache](https://github.com/patrickmn/go-cache) - In-memory key/value cache
+
+Install dependencies using the following command:
+
+```bash
+go get -u github.com/gorilla/mux
+go get -u gorm.io/gorm
+go get -u github.com/patrickmn/go-cache
+```
 
 ## Configuration
-The application reads its configuration from an external JSON file. An example configuration file (`config.json`) is provided in the repository. Adjust the configuration values as needed.
+The configuration file `config.json` contains the settings for the application, including database path, serial port details, HTTPS endpoint, and graceful shutdown timeout.
 
 ```json
 {
-    "db_path": "internal/database/schema/atg_data_stream.db",
+    "dbPath": "internal/database/schema/atg_data_stream.db",
     "serial_port_name": "COM1",
     "serial_port_baud": 9600,
-    "https_endpoint": "https://localhost:3000/receive-data"
+    "https_endpoint": "https://localhost:3000/receive-data",
+    "graceful_shutdown_timeout": 10
 }
 ```
 
 ## Usage
 
-### How to Run
+### How to Run the Application
+Run the following command to start the application:
+
 ```bash
 go run main.go
 ```
 
+### Build Application
+To build the application, use the following command:
+
+```bash
+go build -o atgdatastreamer
+```
+
 ### Access Endpoints
-- Local server: [http://localhost:8080](http://localhost:8080)
+The application exposes endpoints for managing tank data. By default, it runs on port 8080.
 
-## API Endpoints
-- **POST /data-tank:** Create a new data tank.
-- **GET /data-tank:** Retrieve all data tanks.
-- **PUT /data-tank/{id}:** Update a data tank by ID.
-- **DELETE /data-tank/{id}:** Delete a data tank by ID.
-- **GET /read-serial:** Read data from the serial port.
+Example:
+- `http://localhost:8080/data-tank` (POST, GET)
+- `http://localhost:8080/data-tank/{id}` (PUT, DELETE)
+- `http://localhost:8080/read-serial` (GET)
 
-## Postman Usage
-Use Postman or a similar tool to interact with the API endpoints.
+### API Endpoints
+- **POST /data-tank**: Create new tank data
+- **GET /data-tank**: Retrieve all tank data
+- **PUT /data-tank/{id}**: Update tank data by ID
+- **DELETE /data-tank/{id}**: Delete tank data by ID
+- **GET /read-serial**: Read data from the serial port
+
+### Postman Usage
+Use Postman or any API testing tool to interact with the provided API endpoints.
 
 ## Database Migration
-The application performs automatic database migration on startup. Ensure the SQLite database is created and accessible.
+The application automatically performs database migration using GORM. The SQLite database is created and the `DataTank` table is set up.
 
 ## Code Structure
-The project follows a modular structure:
-- **application:** Main application logic and server setup.
-- **configs:** Configuration loading.
-- **controllers:** HTTP request handlers.
-- **database:** Database initialization and migration.
-- **delivery:** Data delivery mechanisms (HTTPS, cache).
-- **models:** Data structures used in the application.
-- **repository:** Database interactions.
-- **serial:** Serial port communication.
-- **usecase:** Business logic and use case implementations.
+- **/internal/application**: Main application logic
+- **/internal/configs**: Configuration handling
+- **/internal/controllers**: HTTP request handlers
+- **/internal/database**: Database initialization and migration
+- **/internal/delivery**: Data delivery to an HTTPS endpoint
+- **/internal/models**: Data models
+- **/internal/repository**: Database interaction
+- **/internal/serial**: Serial port communication
+- **/internal/usecase**: Business logic and use cases
+- **main.go**: Entry point for the application
 
 ## Middleware
-The application utilizes middleware for logging. The `MyLoggingMiddleware` middleware logs information about each incoming request.
+The application uses a logging middleware (`MyLoggingMiddleware`) to log information about incoming HTTP requests.
 
 ## Caching
-The application implements an in-memory cache using the `github.com/patrickmn/go-cache` library. The cache is initialized with a default expiration time of 5 minutes.
+Caching is implemented using an in-memory cache with a default expiration time of 5 minutes. The cache is initialized in `InitializeCache()`.
 
 ## Testing Scenarios
-- Ensure data tank creation, retrieval, update, and deletion work as expected.
-- Verify serial port communication by reading data from the serial port.
-- Test HTTPS data delivery.
-- Evaluate database migration functionality.
+
+### Scenario 1: Create Tank Data
+
+1. Send a POST request to `/data-tank` with valid tank data in the request body.
+
+### Scenario 2: Read Tank Data
+
+1. Send a GET request to `/data-tank` to retrieve all tank data.
+
+### Scenario 3: Update Tank Data
+
+1. Send a PUT request to `/data-tank/{id}` with the ID of an existing tank and updated data.
+
+### Scenario 4: Delete Tank Data
+
+1. Send a DELETE request to `/data-tank/{id}` with the ID of an existing tank to delete it.
+
+### Scenario 5: Read from Serial
+
+1. Send a GET request to `/read-serial` to read data from the serial port.
+
+## Mock-up Testing
+
+Mock-up testing scenarios should be implemented to simulate various conditions such as network failures, serial communication errors, and server unavailability.
 
 ## To-Do List
-- [x] Implement caching for improved performance.
-- [x] Enhance error handling and logging.
-- [ ] Add validation for API inputs.
-- [ ] Implement unit tests for critical components.
-- [ ] Implement authentication for secure access.
-- [ ] Implement HTTPS server for improved security.
+- [ ] Enhance error handling for HTTP requests.
+- [ ] Implement validation for tank data.
+- [ ] Enhance serial port error handling.
+- [ ] Implement comprehensive unit tests.
 
 ## Future Improvements
-- [ ] Integrate with additional data sources and sinks.
-- [ ] Integration with other data delivery mechanisms.
-- [ ] Dockerization for easy deployment.
-- [ ] Support for additional database systems.
+- [ ] Implementing additional security measures
+- [ ] Enhancing data validation and error handling
+- [ ] Supporting multiple database backends
 
-## Code Flow
-The following is a simplified flow of the application code:
+## Program Flow Explanation
 
-1. **Main Execution (main.go
-
-):**
-   - Load configuration.
-   - Initialize the database.
-   - Create repository, serial port, HTTPS delivery, use case, and controller instances.
-   - Initialize and run the application.
-
-2. **Application Initialization (application/app.go):**
-   - Set up routes and handlers.
-   - Perform database migration.
-   - Start the HTTP server.
-
-3. **Controller Handling (controllers/data_tank_controller.go):**
-   - Receive HTTP requests.
-   - Invoke corresponding use case methods.
-
-4. **Use Case Execution (usecase/data_tank_usecase.go):**
-   - Implement business logic.
-   - Interact with the repository for data storage.
-   - Communicate with the serial port and deliver data via HTTPS.
-
-5. **Repository Interaction (repository/data_tank_repository.go):**
-   - Perform CRUD operations on the SQLite database.
-
-6. **Serial Port Communication (serial/serialPort.go):**
-   - Connect to the specified serial port.
-   - Read and write data.
-
-7. **HTTPS Delivery (delivery/https_delivery.go):**
-   - Send data to the configured HTTPS endpoint.
-
-8. **Database Initialization (database/database.go):**
-   - Initialize and migrate the SQLite database.
-
-9. **Configuration Loading (configs/config_loader.go):**
-   - Load the application configuration from a JSON file.
-
-10. **Model Definitions (models/data_tank.go):**
-   - Define data structures used in the application.
+1. **Initialization**: The application initializes the database, repository, serial port, and HTTPS delivery.
+2. **Routing**: HTTP routes are defined using Gorilla mux in `internal/application/app.go`.
+3. **Middleware**: Requests pass through a logging middleware defined in `internal/application/middleware.go`.
+4. **Endpoint Handling**: Each endpoint is handled by the respective controller methods in `internal/controllers/dataTank_controller.go`.
+5. **Database Interaction**: The controller methods interact with the database using the repository in `internal/repository/dataTank_repository.go`.
+6. **Serial Communication**: The application reads data from the serial port and parses it using the SS160PLUS Protocol in `internal/serial/serialPort.go` and `internal/serial/ss160plus_parser.go`.
+7. **HTTPS Delivery**: Tank data is sent to the configured HTTPS endpoint using the `HttpsDelivery` in `internal/delivery/https_delivery.go`.
+8. **Caching**: A simple cache is initialized in `internal/application/cache.go` to store tank data temporarily.
+9. **Shutdown Signal Handling**: The application gracefully handles shutdown signals, allowing ongoing tasks to finish.
+10. **Run Application**: The application is run, and the server starts listening for incoming requests.
 
 This flow represents the key components and their interactions within the ATGDataStreamer application.

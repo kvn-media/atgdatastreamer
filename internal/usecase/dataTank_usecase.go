@@ -3,6 +3,7 @@ package usecase
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/kvn-media/atgdatastreamer/internal/delivery"
@@ -63,6 +64,9 @@ func (u *dataTankUsecase) DeleteDataTank(id int) error {
 	return nil
 }
 
+const serialReadTimeout = 5 * time.Second
+
+// ReadFromSerial reads data from the serial port
 func (u *dataTankUsecase) ReadFromSerial() ([]byte, error) {
 	var receivedData []byte
 	done := make(chan struct{})
@@ -85,13 +89,16 @@ func (u *dataTankUsecase) ReadFromSerial() ([]byte, error) {
 		// Further processing of receivedData (e.g., storing in the database)
 		parsedData, parseErr := serial.ParseSS160PLUSProtocol(receivedData)
 		if parseErr != nil {
+			log.Printf("Error parsing received data: %v", parseErr)
 			return nil, fmt.Errorf("failed to parse received data: %v", parseErr)
 		}
+		log.Println("Data received successfully from serial")
 		return parsedData, nil
 
-	case <-time.After(5 * time.Second): // Adjust timeout as needed
+	case <-time.After(serialReadTimeout):
 		// Timeout waiting for data
-		return nil, fmt.Errorf("timeout waiting for serial data")
+		log.Println("Timeout waiting for serial data in ReadFromSerial")
+		return nil, fmt.Errorf("timeout waiting for serial data in ReadFromSerial")
 	}
 }
 

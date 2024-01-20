@@ -89,7 +89,7 @@ func (app *App) handleShutdownSignal() {
 	<-stopChan
 
 	// Allow time to finish last tasks (optional)
-	gracefulShutdownTimeout := 20 * time.Minute
+	gracefulShutdownTimeout := app.config.GracefulShutdownTimeout
 	ctx, cancel := context.WithTimeout(context.Background(), gracefulShutdownTimeout)
 	defer cancel()
 
